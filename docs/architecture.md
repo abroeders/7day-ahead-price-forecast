@@ -65,9 +65,10 @@ classDiagram
 sequenceDiagram
   participant C as Coordinator
   participant P as RemoteProvider
-  participant S1 as Server 1
-  participant S2 as Server 2
+  participant S1 as Server (picked at random)
+  participant S2 as Other server
   C->>P: fetch(zone)
+  P->>P: shuffle server list
   P->>S1: GET forecast
   alt answers and is fresh
     S1-->>P: forecast
@@ -85,4 +86,4 @@ sequenceDiagram
 | Strategy | `ForecastProvider`, `ZonePlugin` |
 | Interpreter | `FormulaParser` |
 | Facade | `BaseController` |
-| Chain of fallbacks | server list in `RemoteProvider` |
+| Chain of fallbacks | server list in `RemoteProvider`, shuffled per refresh (load spreading) |

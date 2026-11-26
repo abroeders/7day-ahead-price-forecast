@@ -27,7 +27,7 @@ devices.
 
 ## Forecast service client
 The integration reads the forecast over HTTP from the forecast service. It has **two built-in server
-addresses** (more may follow); it tries them in order and falls back to the next one when a server does not
+addresses** (more may follow); for every refresh it picks one at random (which spreads the load over the servers) and falls back to the other one when a server does not
 answer, answers with an error or serves a forecast that is too old. The addresses are constants of the
 integration and are not user settings. Reading is read-only and needs no account.
 
@@ -40,8 +40,8 @@ flowchart LR
     SC3[Sub-controller: bare price] --> BC
     CARD[Lovelace card] --> SC1
   end
-  RP -->|HTTPS, first server| S1[Forecast service 1]
-  RP -.->|fallback| S2[Forecast service 2]
+  RP -->|HTTPS, random pick| S1[Forecast service 1]
+  RP -.->|failover| S2[Forecast service 2]
 ```
 
 The contract between integration and service (`GET /forecast?zone=NL`, schema version in the response)
