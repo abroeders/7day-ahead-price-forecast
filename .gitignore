@@ -9,4 +9,9 @@ htmlcov/
 .DS_Store
 .idea/
 node_modules/
+
+# documentation site, built by mkdocs
 /site/
+
+# local history database: raw third-party data is never published
+/data/
