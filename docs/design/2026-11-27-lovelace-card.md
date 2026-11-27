@@ -46,13 +46,17 @@ a `HTMLElement` web component with shadow DOM and inline SVG; no runtime depende
   - Zoom: the `+` / `−` buttons and `reset` (fit all) in the top right of the chart, `Ctrl`/`⌘` + mouse wheel
     around the pointer, pinch with two fingers. Plain wheel is left to the page so dashboards still scroll.
     Double click or double tap resets.
-  - Pan: drag with the mouse or one finger horizontally, or `Shift` + wheel / horizontal wheel.
+  - Zoom to an area (mouse): drag a box with the left button over the plot; a translucent box covers the chosen
+    time range (full plot height, clamped to the plot area) and on release the window becomes that range, clamped
+    to the limits below. A drag shorter than 8 px is ignored, so a plain click does nothing.
+  - Pan: drag horizontally with one finger, or with the mouse while holding `Shift`, or `Shift` + wheel /
+    horizontal wheel. A plain mouse drag draws the zoom box instead of panning.
   - Limits: the window never leaves the shown range and is at least 3 hours wide (12 quarter hours).
   - The y axis rescales to the points inside the window, band included. Only points that overlap the window are
     drawn, clipped at the plot area. The x axis labels adapt: midnights (with the day) above 3 days of window,
     otherwise whole hours (1, 2, 3, 6 or 12 hour steps, whichever keeps labels at least 60 px apart) with the
     day at midnight.
-  - The hairline and tooltip work in every zoom state; during a drag they are hidden. The day table always covers
+  - The hairline and tooltip work in every zoom state; during a drag or box selection they are hidden. The day table always covers
     the whole range. The window resets when the entity or `forecast_days` changes and is kept when data
     refreshes.
   - Pure logic in `chart-core.js`: `visibleSlice`, `clampView`, `zoomView`, `panView`, `xTicks`.

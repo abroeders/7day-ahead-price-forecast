@@ -155,8 +155,12 @@ classDiagram
     -draw()
     -onPointerMove(event)
     -onWheel(event)
+    -onPointerDown(event)
+    -drawBox(x0, x1)
   }
-  class DayAheadPriceForecastCardEditor
+  class DayAheadPriceForecastCardEditor {
+    ha-form: entity + forecast_days
+  }
   class ChartCore {
     <<module>>
     +cutForecast()
@@ -188,8 +192,11 @@ sequenceDiagram
   U->>Card: pointermove
   Card->>Core: nearestPoint(time)
   Card->>Card: move hairline, show tooltip
-  U->>Card: Ctrl+wheel, pinch, drag or buttons
+  U->>Card: Ctrl+wheel, pinch, Shift+drag or buttons
   Card->>Core: zoomView / panView, clampView
+  U->>Card: drag a box (mouse)
+  Card->>Card: drawBox while dragging
+  Card->>Core: clampView(box start, box end)
   Card->>Core: visibleSlice, yScale, xTicks
   Card->>Card: redraw the window
 ```

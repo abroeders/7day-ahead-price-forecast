@@ -6,6 +6,20 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 ## [Unreleased]
 
+## [2026.11.2] - 2026-11-27
+
+### Added
+
+- Card: drag a box over the chart with the mouse to zoom in on that time range. Panning with the mouse is now
+  `Shift` + drag; touch is unchanged.
+
+### Fixed
+
+- Card editor: the number of forecast days was not shown in recent Home Assistant versions; the editor now uses
+  the standard form component.
+- Card: dragging the chart with the mouse or a finger did not pan, because the start of the drag moved along
+  with the pointer.
+
 ## [2026.11.1] - 2026-11-27
 
 ### Added
