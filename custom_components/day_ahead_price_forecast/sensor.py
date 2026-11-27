@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -30,7 +32,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
-    async_add_entities([ServiceStateSensor(coordinator, entry)])
+    async_add_entities(
+        [ServiceStateSensor(coordinator, entry)]
+        + [AccuracySensor(coordinator, entry, metric) for metric in ACCURACY_METRICS]
+    )
     for subentry in entry.subentries.values():
         async_add_entities(
             [
@@ -178,3 +183,64 @@ class ServiceStateSensor(CoordinatorEntity[ForecastCoordinator], SensorEntity):
             "created": data.created.isoformat(),
             "age_minutes": int((dt_util.utcnow() - data.created).total_seconds() // 60),
         }
+
+
+# metric -> (scale to display unit, unit): MAE and bias in ct/kWh, band coverage in %.
+ACCURACY_METRICS: dict[str, tuple[float, str]] = {
+    "mae": (100.0, "ct/kWh"),
+    "bias": (100.0, "ct/kWh"),
+    "coverage": (100.0, PERCENTAGE),
+}
+
+
+class AccuracySensor(CoordinatorEntity[ForecastCoordinator], SensorEntity):
+    """How far earlier forecasts were off (bare price): mean over all days, per day as attribute."""
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 1
+
+    def __init__(
+        self, coordinator: ForecastCoordinator, entry: ForecastConfigEntry, metric: str
+    ) -> None:
+        super().__init__(coordinator)
+        self._metric = metric
+        self._scale, self._attr_native_unit_of_measurement = ACCURACY_METRICS[metric]
+        self._attr_translation_key = f"accuracy_{metric}"
+        self._attr_unique_id = f"{entry.entry_id}_accuracy_{metric}"
+        self._attr_device_info = _device(entry)
+
+    def _per_day(self) -> dict[int, float]:
+        """Scaled values per horizon day; malformed or missing entries are skipped."""
+        data = self.coordinator.data
+        raw = data.accuracy.get(self._metric) if data is not None else None
+        if not isinstance(raw, dict):
+            return {}
+        result: dict[int, float] = {}
+        for key, value in raw.items():
+            try:
+                day = int(key)
+            except (TypeError, ValueError):
+                continue
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                continue
+            if math.isfinite(value):
+                result[day] = round(value * self._scale, 4)
+        return dict(sorted(result.items()))
+
+    @property
+    def native_value(self) -> float | None:
+        per_day = self._per_day()
+        if not per_day:
+            return None
+        return round(sum(per_day.values()) / len(per_day), 4)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        data = self.coordinator.data
+        attrs: dict[str, Any] = {"per_day": {str(d): v for d, v in self._per_day().items()}}
+        hours = data.accuracy.get("hours") if data is not None else None
+        if isinstance(hours, int) and not isinstance(hours, bool):
+            attrs["hours"] = hours
+        return attrs

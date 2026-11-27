@@ -77,6 +77,15 @@
           "stale": "Stale",
           "unavailable": "Unavailable"
         }
+      },
+      "accuracy_mae": {
+        "name": "Mean absolute error"
+      },
+      "accuracy_bias": {
+        "name": "Bias"
+      },
+      "accuracy_coverage": {
+        "name": "Band coverage"
       }
     }
   },

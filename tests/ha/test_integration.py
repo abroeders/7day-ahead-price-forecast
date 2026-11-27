@@ -123,3 +123,38 @@ async def test_variant_applies(hass: HomeAssistant, provider, freezer) -> None:
     await hass.async_block_till_done()
     state = next(s for s in hass.states.async_all("sensor") if "forecast" in s.attributes)
     assert float(state.state) == 0.16 * 10
+
+
+async def test_accuracy_sensors(hass: HomeAssistant, entry, provider) -> None:
+    provider.payload["accuracy"] = {
+        "mae": {"1": 0.02, "2": 0.03},
+        "bias": {"1": -0.004, "2": 0.002},
+        "coverage": {"1": 0.8, "2": 0.7, "x": 1, "3": "bad"},
+        "hours": 600,
+    }
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    reg = er.async_get(hass)
+
+    def state(metric):
+        ent = next(e for e in reg.entities.values() if e.unique_id.endswith(f"accuracy_{metric}"))
+        return hass.states.get(ent.entity_id)
+
+    mae = state("mae")
+    assert float(mae.state) == 2.5
+    assert mae.attributes["unit_of_measurement"] == "ct/kWh"
+    assert mae.attributes["per_day"] == {"1": 2.0, "2": 3.0}
+    assert mae.attributes["hours"] == 600
+    assert float(state("bias").state) == -0.1
+    coverage = state("coverage")
+    assert float(coverage.state) == 75.0
+    assert coverage.attributes["per_day"] == {"1": 80.0, "2": 70.0}
+
+
+async def test_accuracy_sensors_without_data(hass: HomeAssistant, entry, provider) -> None:
+    provider.payload.pop("accuracy", None)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    reg = er.async_get(hass)
+    ent = next(e for e in reg.entities.values() if e.unique_id.endswith("accuracy_mae"))
+    assert hass.states.get(ent.entity_id).state == "unknown"

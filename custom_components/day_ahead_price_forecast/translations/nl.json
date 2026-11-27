@@ -77,6 +77,15 @@
           "stale": "Verouderd",
           "unavailable": "Niet beschikbaar"
         }
+      },
+      "accuracy_mae": {
+        "name": "Gemiddelde absolute fout"
+      },
+      "accuracy_bias": {
+        "name": "Afwijking (bias)"
+      },
+      "accuracy_coverage": {
+        "name": "Bandbreedtedekking"
       }
     }
   },

@@ -67,6 +67,12 @@ classDiagram
   class ServiceStateSensor {
     +native_value: ok / stale / unavailable
   }
+  class AccuracySensor {
+    <<diagnostic>>
+    +metric: mae / bias / coverage
+    +native_value: mean over the days
+    +attributes: per_day, hours
+  }
   class ControllerSubentryFlow {
     +validates formula
   }
@@ -85,6 +91,7 @@ classDiagram
   ForecastCoordinator --> ForecastProvider
   ForecastSensor --> ForecastCoordinator
   ServiceStateSensor --> ForecastCoordinator
+  AccuracySensor --> ForecastCoordinator
   ControllerSubentryFlow ..> FormulaParser
   ForecastSensor --> FormulaVariant
   FormulaVariant --> FormulaParser
@@ -93,6 +100,7 @@ classDiagram
   PriceCalculator --> FormulaVariant
   ForecastSensor --> PriceCalculator
   ForecastProvider ..> Forecast
+  AccuracySensor ..> Forecast
   Forecast --> PricePoint
 ```
 
