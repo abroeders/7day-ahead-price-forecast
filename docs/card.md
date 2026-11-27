@@ -14,6 +14,8 @@ updating the integration, reload the browser page (hard refresh if the card does
 2. Pick **Day-ahead price forecast** from the list.
 3. Choose the forecast sensor of the sub-controller you want to chart and the number of forecast days.
 
+![The card editor with the sensor and the number of forecast days](images/card-editor.png)
+
 The price on the chart is whatever the formula of that sub-controller yields, so add one card per
 sub-controller (purchase, feed-in, bare price, …).
 
@@ -56,12 +58,17 @@ prices plus the first day without published prices. The image below shows `forec
 The card follows your Home Assistant theme (light and dark) and is available in English and Dutch.
 
 ## Zooming and panning
-![The card zoomed in: every quarter hour is a visible step](images/card-zoomed.png)
+Drag a box over the part you want to see; release the mouse button to zoom in on it:
+
+![Dragging a box over the chart to zoom in](images/card-zoom-box.png)
+
+![The result: every quarter hour is a visible step](images/card-zoomed.png)
 
 | Action | Mouse | Touch |
 |---|---|---|
 | Zoom in or out | **+** and **−** buttons, or `Ctrl` (`⌘` on macOS) + mouse wheel around the pointer | **+** and **−** buttons, or pinch with two fingers |
-| Pan | Drag left or right, or `Shift` + mouse wheel | Drag horizontally with one finger |
+| Zoom to an area | Drag a box over the part you want to see; release to zoom in on that time range | — |
+| Pan | `Shift` + drag, or `Shift` + mouse wheel | Drag horizontally with one finger |
 | Show everything again | The reset button, or double click | The reset button, or double tap |
 
 - The plain mouse wheel is left to the dashboard, so the page still scrolls.
