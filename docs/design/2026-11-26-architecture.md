@@ -47,7 +47,7 @@ flowchart LR
   RP -.->|failover| S2[Forecast service 2]
 ```
 
-The contract between integration and service (`GET /forecast?zone=NL`, schema version in the response)
+The contract between integration and service (with a schema version in the response)
 carries, per quarter hour: start, end, value, P10, P90 and the number of days ahead; the known prices up to now; the
 state of the service; and the accuracy figures. All prices are bare market prices in EUR/kWh.
 

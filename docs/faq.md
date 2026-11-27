@@ -18,5 +18,4 @@ surcharges and VAT come from your formula.
 [Accuracy](accuracy.md) and the [accuracy sensors](entities.md#accuracy-sensors). The error grows with the
 horizon: day 1 mostly follows the known price level, by day 7 the weather forecast dominates and the band is wide.
 
-**Where does the forecast come from?** From the forecast module of the Lectoraat Smart Energie of MNEXT, see
-[Forecast service API](forecast-service.md).
+**Where does the forecast come from?** From the forecast module of the Lectoraat Smart Energie of MNEXT.

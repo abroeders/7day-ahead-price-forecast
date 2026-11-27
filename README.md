@@ -60,7 +60,7 @@ Requires Home Assistant 2026.3 or newer. Currently the Netherlands; more market 
 
 ## Documentation
 **Full user documentation: <https://abroeders.github.io/7day-ahead-price-forecast/>**: installation,
-configuration, entities, the chart card, FAQ and the forecast service API.
+configuration, entities, the chart card, automations, accuracy and FAQ.
 
 ## Support
 
