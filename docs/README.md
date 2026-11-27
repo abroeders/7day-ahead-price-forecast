@@ -10,7 +10,11 @@ Smart Energie of MNEXT. No account or API key is needed.
 | [Price chart card](card.md) | the Lovelace card: published prices, dashed forecast, P10–P90 band, hairline and day table |
 | [Forecast service API](forecast-service.md) | endpoints, response fields, caching and failover, example calls, and how to read the forecast |
 
-Quick start:
+Add the [price chart card](card.md) to a dashboard to see it:
+
+![The price chart card](images/card.png)
+
+Quick start for the API:
 
 ```bash
 curl -s --compressed "https://day-ahead-price-forecast.sendlab.nl/v1/forecast?zone=NL"

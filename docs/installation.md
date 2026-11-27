@@ -18,6 +18,14 @@
 
 Each zone can be added once.
 
+## Show the forecast on a dashboard
+The [price chart card](card.md) is installed with the integration. Add a sub-controller first, then add the card
+to a dashboard and choose its forecast sensor. No resource has to be added by hand.
+
+## Updating
+Update through HACS and restart Home Assistant. Reload the browser page afterwards so the dashboard loads the new
+version of the card.
+
 ![Choosing the market zone](images/zone-form.png)
 
 ![The integration page with the base controller](images/integration-page.png)
