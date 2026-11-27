@@ -15,3 +15,6 @@ node_modules/
 
 # local history database: raw third-party data is never published
 /data/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
