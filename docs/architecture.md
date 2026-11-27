@@ -64,8 +64,14 @@ classDiagram
   class ZonePlugin {
     <<interface>>
     +code
+    +name
+    +country
     +timezone
+    +currency
+    +is_valid_price(value) bool
   }
+  class NetherlandsZone
+  ZonePlugin <|.. NetherlandsZone
   ForecastProvider <|.. RemoteProvider
   BaseController --> ForecastProvider
   BaseController --> ZonePlugin
