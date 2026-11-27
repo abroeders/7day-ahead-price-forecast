@@ -2,7 +2,7 @@
 
 A Home Assistant integration that forecasts the day-ahead electricity price per quarter hour for the **7 days
 after the last known price day**, with a **P10–P90 uncertainty band**, and a Lovelace chart card that shows it. The
-forecast comes from the forecast module of the Lectoraat Smart Energie of MNEXT. No account or API key is needed.
+forecast is made by a model of the Lectoraat Smart Energy of MNEXT. No account or API key is needed.
 
 | Page | What |
 |---|---|
