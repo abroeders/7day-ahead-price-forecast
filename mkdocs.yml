@@ -20,6 +20,7 @@ nav:
   - Configuration: configuration.md
   - Entities: entities.md
   - Price chart card: card.md
+  - Automations and templates: automations.md
   - FAQ: faq.md
   - Forecast service API: forecast-service.md
 

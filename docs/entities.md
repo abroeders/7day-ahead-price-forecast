@@ -16,6 +16,8 @@ formula; it updates at every quarter hour. The attributes carry the whole series
 The `known` and `forecast` attributes are not stored in the recorder database. The [price chart card](card.md)
 reads them to draw the chart.
 
+See [Automations and templates](automations.md) for the cheapest block and more.
+
 Example template giving the cheapest forecast quarter hour of the series:
 
 ```yaml

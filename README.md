@@ -25,7 +25,8 @@ P10–P90 uncertainty band, and a Lovelace chart card that shows it.
 - **Reliable.** Two redundant servers with automatic failover; the sensors keep their last forecast when the
   service is down. No account or API key.
 - **Made for automations.** The whole series is an attribute of the sensor: plan the battery, the heat pump or
-  the dishwasher on the cheapest hours of the coming days.
+  the dishwasher on the cheapest hours of the coming days. The documentation has [ready-made templates](https://abroeders.github.io/7day-ahead-price-forecast/automations/)
+  for the cheapest block of N hours.
 
 ![Zoomed in: every quarter hour is a visible step](docs/images/card-zoomed.png)
 
