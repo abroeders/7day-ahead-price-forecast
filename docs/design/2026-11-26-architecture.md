@@ -3,7 +3,7 @@
 Status: **approved** (issue #2)
 
 ## Goal
-A Home Assistant integration and Lovelace card that show the day-ahead electricity price per hour for the days
+A Home Assistant integration and Lovelace card that show the day-ahead electricity price per quarter hour (15 minutes) for the days
 after the last known price day, with a P10–P90 band, as the price the user actually pays.
 
 The forecast itself comes from the **forecast module of the Lectoraat Smart Energie of MNEXT**. The integration
@@ -15,7 +15,7 @@ is a client of that module; how the forecast is made is not part of this reposit
 - **Sub-controllers** (config subentries). Each has its own text formula over `P` and delivers its own
   forecast entity, for example `P`, `(P+0.0205+0.09174)*1.21` or `P-0.0205`.
 - A formula can have **variants** by start date, time of day and weekday (for example dynamic grid tariffs
-  from 2029). The variant with the latest valid start among the matching ones applies to each hour.
+  from 2029). The variant with the latest valid start among the matching ones applies to each quarter hour.
 - A per-controller switch "prices can be negative". Live validation of the formula in the form.
 - Accuracy sensors on the base controller (MAE, bias, band coverage, in ct/kWh, bare price only), delivered by
   the service.
@@ -24,6 +24,9 @@ is a client of that module; how the forecast is made is not part of this reposit
 
 Out of scope: training or running a model inside Home Assistant, user price sensors as input, control of
 devices.
+
+## Time resolution
+The unit of time is the **quarter hour**, as delivered by the service (96 per day, 92 or 100 on DST days). Formulas, variants (start date, time of day, weekday) and forecast entities work per quarter hour; per-hour or per-day figures (averages, cheapest hour) are derived from them.
 
 ## Forecast service client
 The integration reads the forecast over HTTP from the forecast service. It has **two built-in server
@@ -45,7 +48,7 @@ flowchart LR
 ```
 
 The contract between integration and service (`GET /forecast?zone=NL`, schema version in the response)
-carries, per hour: start, end, value, P10, P90 and the number of days ahead; the known prices up to now; the
+carries, per quarter hour: start, end, value, P10, P90 and the number of days ahead; the known prices up to now; the
 state of the service; and the accuracy figures. All prices are bare market prices in EUR/kWh.
 
 ## Formulas
@@ -56,7 +59,7 @@ which keeps P10 ≤ value ≤ P90; it is evaluated three times (value, P10, P90)
 ## Entities
 | Entity | Controller | Content |
 |---|---|---|
-| Forecast (sensor) | each sub-controller | current price; attributes with the hourly forecast and band |
+| Forecast (sensor) | each sub-controller | current price; attributes with the quarter-hourly forecast and band |
 | Accuracy sensors | base | MAE, bias, band coverage |
 | Service state | base | reachable, server in use, age of the forecast |
 

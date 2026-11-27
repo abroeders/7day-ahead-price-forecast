@@ -31,7 +31,7 @@ classDiagram
   }
   class FormulaVariant {
     +valid_from
-    +hours
+    +time_of_day
     +weekdays
     +formula
   }
