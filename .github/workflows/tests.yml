@@ -32,9 +32,9 @@ jobs:
         run: |
           if [ "${{ matrix.ha }}" = minimum ]; then
             minimum=$(python -c "import json; print(json.load(open('hacs.json'))['homeassistant'])")
-            pip install pytest pytest-asyncio pytest-homeassistant-custom-component "homeassistant~=${minimum%.*}.0"
+            pip install pytest pytest-asyncio pytest-homeassistant-custom-component home-assistant-frontend "homeassistant~=${minimum%.*}.0"
           else
-            pip install pytest pytest-asyncio pytest-homeassistant-custom-component
+            pip install pytest pytest-asyncio pytest-homeassistant-custom-component home-assistant-frontend
           fi
           pip show homeassistant | grep ^Version
       - run: pytest -p no:cacheprovider
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
-      - run: node --test tests/card
+      - run: node --test "tests/card/*.test.mjs"
 
   docs:  # the documentation site builds without broken links
     runs-on: ubuntu-latest
