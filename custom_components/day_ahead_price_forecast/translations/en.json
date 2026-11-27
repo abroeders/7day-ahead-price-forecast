@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Day-ahead price forecast",
+        "description": "Choose the market zone of the base controller.",
+        "data": {
+          "zone": "Zone"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This zone is already configured."
+    }
+  },
+  "config_subentries": {
+    "controller": {
+      "initiate_flow": {
+        "user": "Add sub-controller"
+      },
+      "entry_type": "Sub-controller",
+      "step": {
+        "user": {
+          "title": "New sub-controller",
+          "description": "The price is calculated from the bare market price `P` (EUR/kWh), for example `(P + 0.02 + 0.09) * 1.21`.",
+          "data": {
+            "name": "Name",
+            "formula": "Formula",
+            "allow_negative": "Prices can be negative"
+          }
+        },
+        "reconfigure": {
+          "title": "Edit sub-controller",
+          "description": "The price is calculated from the bare market price `P` (EUR/kWh), for example `(P + 0.02 + 0.09) * 1.21`.",
+          "data": {
+            "name": "Name",
+            "formula": "Formula",
+            "allow_negative": "Prices can be negative"
+          }
+        }
+      },
+      "error": {
+        "invalid_formula": "The formula is not valid, or decreases when P increases."
+      },
+      "abort": {
+        "reconfigure_successful": "Sub-controller updated."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "service_state": {
+        "name": "Forecast service",
+        "state": {
+          "ok": "OK",
+          "stale": "Stale",
+          "unavailable": "Unavailable"
+        }
+      }
+    }
+  }
+}

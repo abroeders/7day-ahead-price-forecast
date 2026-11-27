@@ -51,15 +51,24 @@ classDiagram
     +formula
     +matches(start) bool
   }
-  class SubController {
-    +variants: list~FormulaVariant~
-    +allow_negative: bool
-    +apply(forecast) Forecast
-  }
-  class BaseController {
-    +zone: ZonePlugin
-    +provider: ForecastProvider
+  class ForecastCoordinator {
+    <<base controller>>
+    +zone: str
+    +node: str
+    -provider: ForecastProvider
     +refresh()
+  }
+  class ForecastSensor {
+    <<sub-controller, config subentry>>
+    -calculator: PriceCalculator
+    +native_value: current price
+    +attributes: known, forecast
+  }
+  class ServiceStateSensor {
+    +native_value: ok / stale / unavailable
+  }
+  class ControllerSubentryFlow {
+    +validates formula
   }
   class ZonePlugin {
     <<interface>>
@@ -73,15 +82,16 @@ classDiagram
   class NetherlandsZone
   ZonePlugin <|.. NetherlandsZone
   ForecastProvider <|.. RemoteProvider
-  BaseController --> ForecastProvider
-  BaseController --> ZonePlugin
-  BaseController "1" --> "*" SubController
-  SubController --> FormulaVariant
+  ForecastCoordinator --> ForecastProvider
+  ForecastSensor --> ForecastCoordinator
+  ServiceStateSensor --> ForecastCoordinator
+  ControllerSubentryFlow ..> FormulaParser
+  ForecastSensor --> FormulaVariant
   FormulaVariant --> FormulaParser
   FormulaParser ..> Formula
   FormulaParser ..> FormulaError
   PriceCalculator --> FormulaVariant
-  SubController --> PriceCalculator
+  ForecastSensor --> PriceCalculator
   ForecastProvider ..> Forecast
   Forecast --> PricePoint
 ```
@@ -89,7 +99,8 @@ classDiagram
 ## Refresh with failover
 ```mermaid
 sequenceDiagram
-  participant C as Coordinator
+  participant C as ForecastCoordinator
+  participant Sensors as Forecast sensors
   participant P as RemoteProvider
   participant S1 as Server (picked at random)
   participant S2 as Other server
@@ -103,7 +114,23 @@ sequenceDiagram
     S2-->>P: forecast
   end
   P-->>C: Forecast
-  C->>C: each sub-controller applies its formula
+  C-->>Sensors: listeners notified
+  Sensors->>Sensors: each forecast sensor applies its formula
+```
+
+## Sub-controller lifecycle
+A sub-controller is a config subentry of the base controller entry. The config flow offers *Add sub-controller*
+(name, formula, "prices can be negative"); the formula is parsed while the form is submitted and rejected when
+invalid or decreasing. Changing a subentry reloads the entry, which rebuilds the sensors.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Form: add / reconfigure
+  Form --> Form: invalid formula
+  Form --> Stored: valid
+  Stored --> Loaded: entry reload
+  Loaded --> Stored: reconfigure
+  Stored --> [*]: delete
 ```
 
 ## Design patterns
@@ -111,5 +138,5 @@ sequenceDiagram
 |---|---|
 | Strategy | `ForecastProvider`, `ZonePlugin` |
 | Interpreter | `FormulaParser` |
-| Facade | `BaseController` |
+| Facade | `ForecastCoordinator` (one refresh shared by all sub-controllers) |
 | Chain of fallbacks | server list in `RemoteProvider`, shuffled per refresh (load spreading) |

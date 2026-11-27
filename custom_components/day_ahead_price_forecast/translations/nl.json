@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Day-ahead price forecast",
+        "description": "Kies de marktzone van de basiscontroller.",
+        "data": {
+          "zone": "Zone"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Deze zone is al ingesteld."
+    }
+  },
+  "config_subentries": {
+    "controller": {
+      "initiate_flow": {
+        "user": "Subcontroller toevoegen"
+      },
+      "entry_type": "Subcontroller",
+      "step": {
+        "user": {
+          "title": "Nieuwe subcontroller",
+          "description": "De prijs wordt berekend uit de kale marktprijs `P` (EUR/kWh), bijvoorbeeld `(P + 0.02 + 0.09) * 1.21`.",
+          "data": {
+            "name": "Naam",
+            "formula": "Formule",
+            "allow_negative": "Prijzen mogen negatief zijn"
+          }
+        },
+        "reconfigure": {
+          "title": "Subcontroller wijzigen",
+          "description": "De prijs wordt berekend uit de kale marktprijs `P` (EUR/kWh), bijvoorbeeld `(P + 0.02 + 0.09) * 1.21`.",
+          "data": {
+            "name": "Naam",
+            "formula": "Formule",
+            "allow_negative": "Prijzen mogen negatief zijn"
+          }
+        }
+      },
+      "error": {
+        "invalid_formula": "De formule is ongeldig of daalt als P stijgt."
+      },
+      "abort": {
+        "reconfigure_successful": "Subcontroller bijgewerkt."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "service_state": {
+        "name": "Voorspellingsdienst",
+        "state": {
+          "ok": "OK",
+          "stale": "Verouderd",
+          "unavailable": "Niet beschikbaar"
+        }
+      }
+    }
+  }
+}
