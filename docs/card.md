@@ -4,6 +4,8 @@ The integration ships a Lovelace card that charts the quarter-hour prices of one
 ([sub-controller](configuration.md)): the published day-ahead prices as a solid line, followed by the forecast as
 a dashed line with its P10–P90 band.
 
+![The card with the hairline on a forecast quarter hour](images/card.png)
+
 ## Adding the card
 The card is installed together with the integration; there is no resource to add by hand. After installing or
 updating the integration, reload the browser page (hard refresh if the card does not show up).
@@ -32,7 +34,9 @@ forecast_days: 5
 | `show_table` | `true` | Show the table with the average and the cheapest and most expensive hour per day. |
 
 `forecast_days` counts calendar days after the last known price day: with `1`, the chart shows the published
-prices plus the first day without published prices.
+prices plus the first day without published prices. The image below shows `forecast_days: 3`.
+
+![The card with three forecast days](images/card-3-days.png)
 
 ## Reading the chart
 - **Solid line:** published day-ahead prices.

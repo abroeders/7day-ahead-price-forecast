@@ -253,7 +253,10 @@ class DayAheadPriceForecastCard extends HTMLElement {
       .map(
         (ms) =>
           `<line class="grid" x1="${g.x(ms)}" x2="${g.x(ms)}" y1="${M.top}" y2="${g.height - M.bottom}"/>` +
-          `<text class="axis" x="${g.x(ms) + 3}" y="${g.height - 8}">${esc(this._fmtDay(ms))}</text>`,
+          // The label of a day starts at its midnight; skip it when it would run past the chart.
+          (g.x(ms) + 70 <= g.width
+            ? `<text class="axis" x="${g.x(ms) + 3}" y="${g.height - 8}">${esc(this._fmtDay(ms))}</text>`
+            : ""),
       )
       .join("");
     root.innerHTML = `${style}<ha-card>${title}
