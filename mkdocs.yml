@@ -17,6 +17,8 @@ hooks:
 
 nav:
   - Home: README.md
+  - Users:
+      - Forecast service API: forecast-service.md
   - Developers:
       - Architecture: architecture.md
 

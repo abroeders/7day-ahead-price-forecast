@@ -9,6 +9,7 @@ and VAT are added by configurable sub-controllers, so the forecast entity shows 
 
 | Page | What |
 |---|---|
+| [Forecast service API](forecast-service.md) | endpoints, response fields, examples and how to read the forecast |
 | [Architecture](architecture.md) | code structure with UML diagrams, for developers |
 | [Designs](design/) | the design of each feature, as approved before it was built |
 
