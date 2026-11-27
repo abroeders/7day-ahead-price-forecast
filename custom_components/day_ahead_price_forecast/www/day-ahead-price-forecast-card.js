@@ -266,6 +266,10 @@ class DayAheadPriceForecastCard extends HTMLElement {
       .band { fill: var(--primary-color); opacity: 0.18; stroke: none; }
       .now { stroke: var(--secondary-text-color); stroke-width: 1; stroke-dasharray: 2 3; }
       .grabbing { cursor: grabbing; }
+      .boxing { cursor: crosshair; }
+      .sel { position: absolute; pointer-events: none; box-sizing: border-box;
+        background: color-mix(in srgb, var(--primary-color) 18%, transparent);
+        border: 1px solid var(--primary-color); }
       .hair { stroke: var(--primary-text-color); stroke-width: 1; }
       .tip { position: absolute; pointer-events: none; padding: 4px 8px; border-radius: 6px; font-size: 12px;
         background: var(--card-background-color, #fff); color: var(--primary-text-color);
@@ -294,6 +298,7 @@ class DayAheadPriceForecastCard extends HTMLElement {
           <button type="button" data-zoom="reset" aria-label="${esc(t.zoomReset)}" title="${esc(t.zoomReset)}">&#x2922;</button>
         </div>
         <div class="tip" hidden></div>
+        <div class="sel" hidden></div>
       </div>
       ${this._config.show_table !== false ? this._table() : ""}
     </ha-card>`;
@@ -431,7 +436,7 @@ class DayAheadPriceForecastCard extends HTMLElement {
 
   _startGesture() {
     const pts = [...this._pointers.values()];
-    this._gesture = { view: this._currentView(), start: pts[0], moved: this._gesture ? this._gesture.moved : false };
+    this._gesture = { view: this._currentView(), start: { x: pts[0].x, y: pts[0].y }, moved: this._gesture ? this._gesture.moved : false };
     if (pts.length >= 2) this._gesture.dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
   }
 
@@ -461,6 +466,12 @@ class DayAheadPriceForecastCard extends HTMLElement {
     if (!gst.moved && Math.abs(dx) < DRAG_THRESHOLD_PX) return;
     gst.moved = true;
     this._hideHover();
+    if (e.pointerType === "mouse" && !e.shiftKey) {
+      // Desktop: drag a box over the area to zoom in on (hold Shift to pan instead).
+      gst.box = true;
+      this._drawBox(gst.start.x, e.clientX);
+      return;
+    }
     this.shadowRoot.querySelector(".wrap").classList.add("grabbing");
     const { scale, plotW } = this._metrics();
     const span = gst.view.v1 - gst.view.v0;
@@ -473,9 +484,35 @@ class DayAheadPriceForecastCard extends HTMLElement {
       this._startGesture();
       return;
     }
+    const gst = this._gesture;
     this._gesture = null;
     const wrap = this.shadowRoot.querySelector(".wrap");
     if (wrap) wrap.classList.remove("grabbing");
+    const sel = this.shadowRoot.querySelector(".sel");
+    if (sel) sel.hidden = true;
+    if (gst && gst.box && e.type === "pointerup" && this._g) {
+      const a = this._timeAt(gst.start.x);
+      const b = this._timeAt(e.clientX);
+      if (Math.abs(e.clientX - gst.start.x) >= 2 * DRAG_THRESHOLD_PX) {
+        this._setView(clampView(Math.min(a, b), Math.max(a, b), this._bounds.min, this._bounds.max, MIN_SPAN_MS));
+      }
+    }
+  }
+
+  // Selection box over the plot area, between two client x positions.
+  _drawBox(x0, x1) {
+    const { rect, scale } = this._metrics();
+    const wrapRect = this.shadowRoot.querySelector(".wrap").getBoundingClientRect();
+    const lo = rect.left + M.left / scale;
+    const hi = rect.left + (this._g.width - M.right) / scale;
+    const a = Math.min(hi, Math.max(lo, Math.min(x0, x1)));
+    const b = Math.min(hi, Math.max(lo, Math.max(x0, x1)));
+    const sel = this.shadowRoot.querySelector(".sel");
+    sel.style.left = `${a - wrapRect.left}px`;
+    sel.style.width = `${b - a}px`;
+    sel.style.top = `${rect.top - wrapRect.top + M.top / scale}px`;
+    sel.style.height = `${(this._g.height - M.top - M.bottom) / scale}px`;
+    sel.hidden = false;
   }
 
   _showHover(e) {
@@ -520,7 +557,7 @@ class DayAheadPriceForecastCardEditor extends HTMLElement {
     super();
     this._config = {};
     this._hass = null;
-    this._built = false;
+    this._form = null;
   }
 
   setConfig(config) {
@@ -537,29 +574,30 @@ class DayAheadPriceForecastCardEditor extends HTMLElement {
     if (!this._hass) return;
     const lang = ((this._hass.locale && this._hass.locale.language) || "en").slice(0, 2);
     const t = LABELS[lang] || LABELS.en;
-    if (!this._built) {
-      this._built = true;
-      this.innerHTML = `<div style="display:flex;flex-direction:column;gap:16px">
-        <ha-entity-picker allow-custom-entity></ha-entity-picker>
-        <ha-textfield type="number" min="1" max="7" step="1" id="days"></ha-textfield>
-      </div>`;
-      this._picker = this.querySelector("ha-entity-picker");
-      this._days = this.querySelector("#days");
-      this._picker.addEventListener("value-changed", (e) => {
+    if (!this._form) {
+      this._form = document.createElement("ha-form");
+      this._form.computeLabel = (schema) => this._labels[schema.name] || schema.name;
+      this._form.addEventListener("value-changed", (e) => {
         e.stopPropagation();
-        this._fire({ ...this._config, entity: e.detail.value });
+        const v = e.detail.value || {};
+        this._fire({ ...this._config, entity: v.entity, forecast_days: clampDays(v.forecast_days) });
       });
-      this._days.addEventListener("change", () => {
-        this._fire({ ...this._config, forecast_days: clampDays(this._days.value) });
-      });
+      this.appendChild(this._form);
     }
-    this._picker.hass = this._hass;
-    this._picker.includeDomains = ["sensor"];
-    this._picker.entityFilter = (st) => !!(st.attributes && "forecast" in st.attributes);
-    this._picker.label = t.entity;
-    this._picker.value = this._config.entity || "";
-    this._days.label = t.forecastDays;
-    this._days.value = String(this._config.forecast_days ?? 7);
+    this._labels = { entity: t.entity, forecast_days: t.forecastDays };
+    this._form.hass = this._hass;
+    this._form.schema = [
+      {
+        name: "entity",
+        required: true,
+        selector: { entity: { domain: "sensor", filter: { domain: "sensor" } } },
+      },
+      { name: "forecast_days", selector: { number: { min: 1, max: 7, step: 1, mode: "box" } } },
+    ];
+    this._form.data = {
+      entity: this._config.entity || "",
+      forecast_days: this._config.forecast_days ?? 7,
+    };
   }
 
   _fire(config) {
