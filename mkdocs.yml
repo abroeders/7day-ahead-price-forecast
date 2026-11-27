@@ -1,0 +1,66 @@
+# Documentation site on GitHub Pages, built from docs/ by .github/workflows/docs.yml
+site_name: 7-Day-Ahead Price Forecast
+site_description: Home Assistant integration that forecasts day-ahead electricity prices seven days ahead
+site_url: https://abroeders.github.io/7day-ahead-price-forecast/
+repo_url: https://github.com/abroeders/7day-ahead-price-forecast
+repo_name: abroeders/7day-ahead-price-forecast
+edit_uri: edit/develop/docs/
+
+docs_dir: docs
+exclude_docs: |
+  design/
+  hooks.py
+  overrides/
+  __pycache__/
+hooks:
+  - docs/hooks.py
+
+nav:
+  - Home: README.md
+  - Users:
+      - Forecast service API: forecast-service.md
+  - Developers:
+      - Architecture: architecture.md
+
+theme:
+  name: material
+  custom_dir: docs/overrides  # partials/header.html: support button in the top bar
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/weather-night
+        name: Dark theme
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Light theme
+
+markdown_extensions:
+  - admonition
+  - tables
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: simple/buymeacoffee
+      link: https://www.buymeacoffee.com/abroeders
+      name: Support the development with a coffee
+    - icon: fontawesome/brands/github
+      link: https://github.com/abroeders/7day-ahead-price-forecast
+      name: Source code on GitHub
