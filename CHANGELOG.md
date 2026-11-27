@@ -6,6 +6,8 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 ## [Unreleased]
 
+## [2026.11.2] - 2026-11-27
+
 ### Added
 
 - Card: drag a box over the chart with the mouse to zoom in on that time range. Panning with the mouse is now
