@@ -8,7 +8,7 @@ prices as a solid line, the forecast as a dashed line with a P10–P90 band per 
 
 ## Requirements
 See issue #8. Out of scope: all-in price (the price is whatever the sub-controller's formula yields), several
-entities in one chart, zoom and pan.
+entities in one chart.
 
 ## Card configuration
 ```yaml
@@ -40,6 +40,22 @@ a `HTMLElement` web component with shadow DOM and inline SVG; no runtime depende
 - **Hairline:** a vertical line in the SVG that follows `pointermove` (mouse and touch) and snaps to the quarter
   hour under the pointer; a tooltip shows start time, value and, for forecast points, P10–P90 and the label
   "forecast". It hides on `pointerleave`.
+- **Zoom and pan (x axis only):** at full range a quarter hour is about one pixel wide, so the steps cannot be
+  seen; zooming makes them visible. The view is a window `[v0, v1]` (ms) inside the shown range, initially the
+  whole range.
+  - Zoom: the `+` / `−` buttons and `reset` (fit all) in the top right of the chart, `Ctrl`/`⌘` + mouse wheel
+    around the pointer, pinch with two fingers. Plain wheel is left to the page so dashboards still scroll.
+    Double click or double tap resets.
+  - Pan: drag with the mouse or one finger horizontally, or `Shift` + wheel / horizontal wheel.
+  - Limits: the window never leaves the shown range and is at least 3 hours wide (12 quarter hours).
+  - The y axis rescales to the points inside the window, band included. Only points that overlap the window are
+    drawn, clipped at the plot area. The x axis labels adapt: midnights (with the day) above 3 days of window,
+    otherwise whole hours (1, 2, 3, 6 or 12 hour steps, whichever keeps labels at least 60 px apart) with the
+    day at midnight.
+  - The hairline and tooltip work in every zoom state; during a drag they are hidden. The day table always covers
+    the whole range. The window resets when the entity or `forecast_days` changes and is kept when data
+    refreshes.
+  - Pure logic in `chart-core.js`: `visibleSlice`, `clampView`, `zoomView`, `panView`, `xTicks`.
 - **Now marker:** vertical line at the current time, updated every minute.
 - **Day table:** per local day: average (time-weighted over the quarter hours), cheapest and most expensive hour
   (average over the four quarters of each full clock hour). Forecast days are marked.
@@ -62,7 +78,7 @@ tested with Node's built-in test runner (`node --test`) in CI, without a browser
 
 ## Testing
 - Node tests for range cut by `forecast_days` (including DST days), scales, step paths, band polygon, day
-  statistics and hairline snapping.
+  statistics, hairline snapping, view clamping, zoom around an anchor, pan and the adaptive x ticks.
 - Python test that the static path and extra JS URL are registered on setup.
 - Screenshots (English, light theme, made-up data) in `docs/images/`: card, tooltip and editor.
 
