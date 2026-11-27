@@ -67,5 +67,17 @@ tested with Node's built-in test runner (`node --test`) in CI, without a browser
 - Screenshots (English, light theme, made-up data) in `docs/images/`: card, tooltip and editor.
 
 ## Documentation
-New `docs/card.md` (install-free usage, options, screenshots); mention in `docs/entities.md`, `docs/README.md`
-and `mkdocs.yml`; sequence and class diagrams in `docs/architecture.md`.
+User documentation is published on the public GitHub Pages site
+(<https://abroeders.github.io/7day-ahead-price-forecast/>, built from `docs/` by `.github/workflows/docs.yml`,
+which already exists).
+- New page `docs/card.md` (added to `nav` in `mkdocs.yml`): what the card shows, adding it to a dashboard
+  (no manual resource needed), every option (`entity`, `forecast_days`, `title`, `show_table`), reading the
+  chart (solid versus dashed, band, hairline, now marker, day table), troubleshooting (card not in the picker,
+  empty chart, browser cache), with screenshots from `docs/images/`.
+- Mention the card in `docs/entities.md` (which attributes it reads), `docs/README.md` (home page) and the FAQ.
+- Site title and description change from "Forecast Service" to the integration and card as a whole; the
+  site covers installation, configuration, entities, the card, FAQ and the client contract.
+- `README.md` gets a "Documentation" section with a prominent link to the site, plus a short feature list.
+- `mkdocs build --strict` must pass in CI; screenshots are English, light theme, made-up demo data.
+
+Sequence and class diagrams for the card go in `docs/architecture.md` (not published on the site).
