@@ -6,14 +6,20 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 ## [Unreleased]
 
+## [2026.11.3] - 2026-11-27
+
+### Added
+
+- A test that runs the integration's lifecycle under `blockbuster`, so a blocking call in the event loop fails
+  the build.
+- SonarCloud analysis settings, a minimum test coverage of 94% in CI and weekly Dependabot updates of the
+  GitHub Actions.
+- Docs: a script that finds the cheapest block of consecutive hours in the coming days.
+
 ### Changed
 
 - Installation: the steps describe the built-in Marketplace (*Add from link*, with a My Home Assistant button) for
   Home Assistant 2026.11 and later; the HACS steps stay for older versions.
-
-### Added
-
-- Docs: a script that finds the cheapest block of consecutive hours in the coming days.
 
 ## [2026.11.2] - 2026-11-27
 
