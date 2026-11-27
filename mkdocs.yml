@@ -19,6 +19,7 @@ nav:
   - Installation: installation.md
   - Configuration: configuration.md
   - Entities: entities.md
+  - Accuracy: accuracy.md
   - Price chart card: card.md
   - Automations and templates: automations.md
   - FAQ: faq.md

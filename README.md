@@ -11,6 +11,18 @@ P10–P90 uncertainty band, and a Lovelace chart card that shows it.
 
 ![The price chart card: published prices solid, forecast dashed with its band](docs/images/card.png)
 
+## How accurate?
+Checked against the published day-ahead prices over a full year, the forecast is on average only
+**1.6 ct/kWh off for the first forecast day and 2.5 ct/kWh for the seventh**, per quarter hour. That is
+**26 to 50 % smaller error** than assuming the last known day repeats, and the P10–P90 band shows how sure each
+quarter hour is.
+
+![Average error per forecast day: 1.62 ct/kWh on day 1 up to 2.45 on day 7, against 2.74 to 3.65 for repeating the last known day](docs/images/accuracy.svg)
+
+The shape of the day is predicted best, so the cheapest hours and blocks are found reliably. See
+[Accuracy](https://abroeders.github.io/7day-ahead-price-forecast/accuracy/) for the details and the periods
+that are harder.
+
 ## Features
 - **Seven days ahead, per quarter hour.** The forecast starts where the published day-ahead prices end, so you
   always see the full picture: what is known and what is expected.
