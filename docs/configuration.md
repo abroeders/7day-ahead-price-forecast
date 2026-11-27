@@ -15,6 +15,8 @@ it later with **Reconfigure**. You can add as many as you like, for example one 
 | Formula | price calculation over `P`, see below |
 | Prices can be negative | when off, results below zero are set to zero |
 
+![Adding a sub-controller](images/subcontroller-form.png)
+
 ### Formulas
 A formula uses `P`, numbers, `+ - * /`, parentheses and `min(...)` / `max(...)`.
 
@@ -44,3 +46,7 @@ Tariffs can change over time, for example dynamic grid tariffs from 2029. After 
 
 When several variants match, the one with the latest *valid from* wins; on a tie, the one added last. If none
 matches, the main formula applies. **Remove all variants** clears them again.
+
+![The variants menu](images/variants-menu.png)
+
+![Adding a variant: weekdays 07:00–23:00](images/variant-form.png)

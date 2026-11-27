@@ -4,6 +4,8 @@
 One per sub-controller. The state is the price of the current quarter hour in EUR/kWh, calculated with your
 formula; it updates at every quarter hour. The attributes carry the whole series:
 
+![Device of a sub-controller](images/sub-device.png)
+
 | Attribute | Content |
 |---|---|
 | `zone` | market zone, for example `NL` |
@@ -23,6 +25,8 @@ Example template giving the cheapest forecast quarter hour of the series:
 On the base controller. State: `ok`, `stale` (the forecast is older than 3 hours) or `unavailable` (no server
 answered). Attributes: `node` (which server answered), `created` and `age_minutes`.
 Sub-controller sensors keep their last forecast while the service is down.
+
+![Base controller with service state and accuracy sensors](images/base-device.png)
 
 ## Accuracy sensors
 Diagnostic sensors on the base controller that show how far earlier forecasts were off, measured by the forecast

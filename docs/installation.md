@@ -17,3 +17,7 @@
 3. Add one or more [sub-controllers](configuration.md#sub-controllers) to get price entities.
 
 Each zone can be added once.
+
+![Choosing the market zone](images/zone-form.png)
+
+![The integration page with the base controller](images/integration-page.png)
