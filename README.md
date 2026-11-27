@@ -13,7 +13,8 @@ P10–P90 uncertainty band, and a Lovelace chart card that shows it.
 
 ## How accurate?
 Checked against the published day-ahead prices over a full year, the forecast is on average only
-**1.6 ct/kWh off for the first forecast day and 2.5 ct/kWh for the seventh**, per quarter hour. That is
+**1.6 ct/kWh off for the first forecast day and 2.5 ct/kWh for the seventh**, per quarter hour. (Forecast day 1
+is the day right after the published day-ahead prices.) That is
 **26 to 50 % smaller error** than assuming the last known day repeats, and the P10–P90 band shows how sure each
 quarter hour is.
 
