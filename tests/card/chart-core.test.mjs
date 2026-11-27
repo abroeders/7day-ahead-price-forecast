@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  localParts,
   toPoints,
   cutForecast,
   niceStep,
@@ -10,6 +11,12 @@ import {
   bandPolygon,
   dayStats,
   nearestPoint,
+  visibleSlice,
+  clampView,
+  zoomView,
+  panView,
+  xTicks,
+  wallToInstant,
   QUARTER_MS,
   HOUR_MS,
 } from "../../custom_components/day_ahead_price_forecast/www/chart-core.js";
@@ -151,4 +158,86 @@ test("nearestPoint picks the closer side of a gap", () => {
   ];
   assert.equal(nearestPoint(pts, 20), pts[0]);
   assert.equal(nearestPoint(pts, 90), pts[1]);
+});
+
+const BOUNDS = { min: 1000 * HOUR_MS, max: 1100 * HOUR_MS };
+const MIN_SPAN = 3 * HOUR_MS;
+
+test("visibleSlice returns points overlapping the window", () => {
+  const pts = quarters("2026-06-01T00:00:00Z", 8);
+  const s = Date.parse("2026-06-01T00:00:00Z");
+  const vis = visibleSlice(pts, s + 20 * 60000, s + 50 * 60000);
+  assert.deepEqual(vis, pts.slice(1, 4));
+  assert.deepEqual(visibleSlice(pts, s + 2 * HOUR_MS, s + 3 * HOUR_MS), []);
+  assert.deepEqual(visibleSlice(pts, s + 30 * 60000, s + 30 * 60000 + 1), [pts[2]]);
+});
+
+test("clampView shifts inside bounds at both edges and limits the span", () => {
+  assert.deepEqual(clampView(BOUNDS.min - 5 * HOUR_MS, BOUNDS.min + 5 * HOUR_MS, BOUNDS.min, BOUNDS.max, MIN_SPAN), {
+    v0: BOUNDS.min,
+    v1: BOUNDS.min + 10 * HOUR_MS,
+  });
+  assert.deepEqual(clampView(BOUNDS.max - 5 * HOUR_MS, BOUNDS.max + 5 * HOUR_MS, BOUNDS.min, BOUNDS.max, MIN_SPAN), {
+    v0: BOUNDS.max - 10 * HOUR_MS,
+    v1: BOUNDS.max,
+  });
+  const small = clampView(BOUNDS.min + HOUR_MS, BOUNDS.min + 2 * HOUR_MS, BOUNDS.min, BOUNDS.max, MIN_SPAN);
+  assert.equal(small.v1 - small.v0, MIN_SPAN);
+  const big = clampView(BOUNDS.min - HOUR_MS, BOUNDS.max + HOUR_MS, BOUNDS.min, BOUNDS.max, MIN_SPAN);
+  assert.deepEqual(big, { v0: BOUNDS.min, v1: BOUNDS.max });
+});
+
+test("zoomView keeps the anchor at the same relative position and respects min span", () => {
+  const view = { v0: BOUNDS.min + 20 * HOUR_MS, v1: BOUNDS.min + 60 * HOUR_MS };
+  const anchor = view.v0 + 10 * HOUR_MS;
+  const z = zoomView(view, 0.5, anchor, BOUNDS, MIN_SPAN);
+  assert.equal(z.v1 - z.v0, 20 * HOUR_MS);
+  assert.equal((anchor - z.v0) / (z.v1 - z.v0), 0.25);
+  const tiny = zoomView(view, 0.001, anchor, BOUNDS, MIN_SPAN);
+  assert.equal(tiny.v1 - tiny.v0, MIN_SPAN);
+  const out = zoomView(view, 100, anchor, BOUNDS, MIN_SPAN);
+  assert.deepEqual(out, { v0: BOUNDS.min, v1: BOUNDS.max });
+});
+
+test("panView stops at the bounds and keeps the span", () => {
+  const view = { v0: BOUNDS.min + 10 * HOUR_MS, v1: BOUNDS.min + 30 * HOUR_MS };
+  assert.deepEqual(panView(view, 5 * HOUR_MS, BOUNDS), { v0: view.v0 + 5 * HOUR_MS, v1: view.v1 + 5 * HOUR_MS });
+  assert.deepEqual(panView(view, -100 * HOUR_MS, BOUNDS), { v0: BOUNDS.min, v1: BOUNDS.min + 20 * HOUR_MS });
+  assert.deepEqual(panView(view, 500 * HOUR_MS, BOUNDS), { v0: BOUNDS.max - 20 * HOUR_MS, v1: BOUNDS.max });
+});
+
+test("xTicks gives hourly ticks for a 1 day window", () => {
+  const v0 = wallToInstant(2026, 6, 10, 0, 0, TZ);
+  const v1 = wallToInstant(2026, 6, 11, 0, 0, TZ);
+  const ticks = xTicks(v0, v1, 540, TZ);
+  // 540 px / 24 h = 22.5 px per hour, so a 3 hour step.
+  assert.deepEqual(ticks.map((t) => (t.ms - v0) / HOUR_MS), [0, 3, 6, 9, 12, 15, 18, 21, 24]);
+  assert.equal(ticks[0].kind, "day");
+  assert.equal(ticks[8].kind, "day");
+  assert.equal(ticks[1].kind, "hour");
+});
+
+test("xTicks gives midnights for a 7 day window", () => {
+  const v0 = wallToInstant(2026, 6, 10, 6, 0, TZ);
+  const v1 = wallToInstant(2026, 6, 17, 6, 0, TZ);
+  const ticks = xTicks(v0, v1, 540, TZ);
+  assert.equal(ticks.length, 7);
+  assert.ok(ticks.every((t) => t.kind === "day" && localParts(t.ms, TZ).hour === 0));
+});
+
+test("xTicks is DST-safe on a 23 hour day", () => {
+  const v0 = wallToInstant(2026, 3, 29, 0, 0, TZ);
+  const v1 = wallToInstant(2026, 3, 30, 0, 0, TZ);
+  assert.equal((v1 - v0) / HOUR_MS, 23);
+  const ticks = xTicks(v0, v1, 1380, TZ);
+  assert.equal(ticks.length, 24);
+  assert.deepEqual(
+    ticks.map((t) => localParts(t.ms, TZ).hour),
+    [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0],
+  );
+  const coarse = xTicks(v0, v1, 400, TZ);
+  assert.deepEqual(
+    coarse.map((t) => localParts(t.ms, TZ).hour),
+    [0, 6, 12, 18, 0],
+  );
 });

@@ -7,6 +7,12 @@ import {
   bandPolygon,
   dayStats,
   nearestPoint,
+  visibleSlice,
+  clampView,
+  zoomView,
+  panView,
+  xTicks,
+  HOUR_MS,
 } from "./chart-core.js";
 
 const CARD_TAG = "day-ahead-price-forecast-card";
@@ -26,6 +32,9 @@ const LABELS = {
     entity: "Entity",
     forecastDays: "Forecast days (1-7)",
     description: "Chart of published and forecast day-ahead prices",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    zoomReset: "Show full range",
   },
   nl: {
     forecast: "verwachting",
@@ -40,12 +49,17 @@ const LABELS = {
     entity: "Entiteit",
     forecastDays: "Verwachtingsdagen (1-7)",
     description: "Grafiek van gepubliceerde en verwachte day-ahead-prijzen",
+    zoomIn: "Inzoomen",
+    zoomOut: "Uitzoomen",
+    zoomReset: "Hele periode tonen",
   },
 };
 
 const W = 600;
 const H = 260;
 const M = { top: 12, right: 12, bottom: 24, left: 48 };
+const MIN_SPAN_MS = 3 * HOUR_MS;
+const DRAG_THRESHOLD_PX = 4;
 
 function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -76,12 +90,19 @@ class DayAheadPriceForecastCard extends HTMLElement {
     this._hass = null;
     this._lastUpdated = null;
     this._model = null;
+    this._view = null;
+    this._pointers = new Map();
+    this._gesture = null;
     this._timer = null;
     this._resize = new ResizeObserver(() => this._draw());
   }
 
   setConfig(config) {
     if (!config || !config.entity) throw new Error("entity is required");
+    const prev = this._config;
+    if (!prev || prev.entity !== config.entity || prev.forecast_days !== clampDays(config.forecast_days ?? 7)) {
+      this._view = null;
+    }
     this._config = {
       show_table: true,
       ...config,
@@ -190,16 +211,35 @@ class DayAheadPriceForecastCard extends HTMLElement {
     }).format(new Date(ms));
   }
 
+  get _bounds() {
+    const all = this._model.all;
+    return { min: all[0].start, max: all[all.length - 1].end };
+  }
+
+  // The view is kept across refreshes and clamped to the current range.
+  _currentView() {
+    const b = this._bounds;
+    if (!this._view) return { v0: b.min, v1: b.max };
+    return clampView(this._view.v0, this._view.v1, b.min, b.max, MIN_SPAN_MS);
+  }
+
+  _setView(view) {
+    this._view = view;
+    this._renderChart();
+  }
+
   _geometry() {
     const m = this._model;
     const width = Math.max(240, this.clientWidth || W);
     const height = H;
-    const t0 = m.all[0].start;
-    const t1 = m.all[m.all.length - 1].end;
-    const ys = yScale(m.known, m.forecast);
-    const x = linearScale(t0, t1, M.left, width - M.right);
+    const { min: t0, max: t1 } = this._bounds;
+    const { v0, v1 } = this._currentView();
+    const known = visibleSlice(m.known, v0, v1);
+    const forecast = visibleSlice(m.forecast, v0, v1);
+    const ys = yScale(known, forecast);
+    const x = linearScale(v0, v1, M.left, width - M.right);
     const y = linearScale(ys.min, ys.max, height - M.bottom, M.top);
-    return { width, height, t0, t1, ys, x, y };
+    return { width, height, t0, t1, v0, v1, known, forecast, ys, x, y };
   }
 
   _draw() {
@@ -212,7 +252,12 @@ class DayAheadPriceForecastCard extends HTMLElement {
       ha-card { padding: 16px; }
       .title { font-size: 1.2em; margin-bottom: 8px; color: var(--primary-text-color); }
       .msg { color: var(--secondary-text-color); padding: 16px 0; }
-      .wrap { position: relative; touch-action: pan-y; }
+      .wrap { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+      .zoom { position: absolute; top: 2px; right: 2px; display: flex; gap: 4px; }
+      .zoom button { width: 26px; height: 26px; padding: 0; line-height: 1; font-size: 15px; cursor: pointer;
+        border-radius: 6px; border: 1px solid var(--divider-color); color: var(--primary-text-color);
+        background: var(--card-background-color, #fff); opacity: 0.85; }
+      .zoom button:hover, .zoom button:focus-visible { opacity: 1; border-color: var(--primary-color); }
       svg { width: 100%; height: auto; display: block; }
       .grid { stroke: var(--divider-color); stroke-width: 1; }
       .axis { fill: var(--secondary-text-color); font-size: 11px; }
@@ -220,6 +265,7 @@ class DayAheadPriceForecastCard extends HTMLElement {
       .fc { fill: none; stroke: var(--primary-color); stroke-width: 2; stroke-dasharray: 5 4; }
       .band { fill: var(--primary-color); opacity: 0.18; stroke: none; }
       .now { stroke: var(--secondary-text-color); stroke-width: 1; stroke-dasharray: 2 3; }
+      .grabbing { cursor: grabbing; }
       .hair { stroke: var(--primary-text-color); stroke-width: 1; }
       .tip { position: absolute; pointer-events: none; padding: 4px 8px; border-radius: 6px; font-size: 12px;
         background: var(--card-background-color, #fff); color: var(--primary-text-color);
@@ -239,9 +285,47 @@ class DayAheadPriceForecastCard extends HTMLElement {
       root.innerHTML = `${style}<ha-card>${title}<div class="msg">${t[this._model.error || "noData"]}</div></ha-card>`;
       return;
     }
+    root.innerHTML = `${style}<ha-card>${title}
+      <div class="wrap">
+        <svg role="img"></svg>
+        <div class="zoom">
+          <button type="button" data-zoom="in" aria-label="${esc(t.zoomIn)}" title="${esc(t.zoomIn)}">+</button>
+          <button type="button" data-zoom="out" aria-label="${esc(t.zoomOut)}" title="${esc(t.zoomOut)}">&minus;</button>
+          <button type="button" data-zoom="reset" aria-label="${esc(t.zoomReset)}" title="${esc(t.zoomReset)}">&#x2922;</button>
+        </div>
+        <div class="tip" hidden></div>
+      </div>
+      ${this._config.show_table !== false ? this._table() : ""}
+    </ha-card>`;
+    const wrap = root.querySelector(".wrap");
+    wrap.addEventListener("pointermove", (e) => this._onPointerMove(e));
+    wrap.addEventListener("pointerleave", () => {
+      if (!this._pointers.size) this._hideHover();
+    });
+    wrap.addEventListener("pointerdown", (e) => this._onPointerDown(e));
+    wrap.addEventListener("pointerup", (e) => this._onPointerEnd(e));
+    wrap.addEventListener("pointercancel", (e) => this._onPointerEnd(e));
+    wrap.addEventListener("dblclick", (e) => {
+      if (!e.target.closest(".zoom")) this._setView(null);
+    });
+    wrap.addEventListener("wheel", (e) => this._onWheel(e), { passive: false });
+    root.querySelector(".zoom").addEventListener("click", (e) => {
+      const action = e.target.closest("button") && e.target.closest("button").dataset.zoom;
+      if (!action) return;
+      const v = this._currentView();
+      if (action === "reset") this._setView(null);
+      else this._setView(zoomView(v, action === "in" ? 0.5 : 2, (v.v0 + v.v1) / 2, this._bounds, MIN_SPAN_MS));
+    });
+    this._renderChart();
+  }
+
+  _renderChart() {
+    const svg = this.shadowRoot.querySelector("svg");
+    if (!svg || !this._model || !this._model.all.length) return;
     const g = this._geometry();
     this._g = g;
-    const { known, forecast, unit } = this._model;
+    const { unit } = this._model;
+    const plotW = g.width - M.left - M.right;
     const ticks = g.ys.ticks
       .map(
         (v) =>
@@ -249,49 +333,33 @@ class DayAheadPriceForecastCard extends HTMLElement {
           `<text class="axis" x="${M.left - 6}" y="${g.y(v) + 4}" text-anchor="end">${this._fmtValue(v)}</text>`,
       )
       .join("");
-    const xt = this._xTicks(g)
+    const xt = xTicks(g.v0, g.v1, plotW, this._tz)
       .map(
-        (ms) =>
+        ({ ms, kind }) =>
           `<line class="grid" x1="${g.x(ms)}" x2="${g.x(ms)}" y1="${M.top}" y2="${g.height - M.bottom}"/>` +
-          // The label of a day starts at its midnight; skip it when it would run past the chart.
+          // The label starts at its tick; skip it when it would run past the chart.
           (g.x(ms) + 70 <= g.width
-            ? `<text class="axis" x="${g.x(ms) + 3}" y="${g.height - 8}">${esc(this._fmtDay(ms))}</text>`
+            ? `<text class="axis" x="${g.x(ms) + 3}" y="${g.height - 8}">${esc(
+                kind === "day" ? this._fmtDay(ms) : this._fmtTime(ms),
+              )}</text>`
             : ""),
       )
       .join("");
-    root.innerHTML = `${style}<ha-card>${title}
-      <div class="wrap">
-        <svg viewBox="0 0 ${g.width} ${g.height}" role="img" aria-label="${esc(unit)}">
+    svg.setAttribute("viewBox", `0 0 ${g.width} ${g.height}`);
+    svg.setAttribute("aria-label", unit);
+    svg.innerHTML = `<defs><clipPath id="plot-clip"><rect x="${M.left}" y="${M.top}" width="${plotW}" height="${
+      g.height - M.top - M.bottom
+    }"/></clipPath></defs>
           ${ticks}${xt}
-          <path class="band" d="${bandPolygon(forecast, g.x, g.y)}"/>
-          <path class="known" d="${stepPath(known, g.x, g.y)}"/>
-          <path class="fc" d="${stepPath(forecast, g.x, g.y)}"/>
+          <g clip-path="url(#plot-clip)">
+            <path class="band" d="${bandPolygon(g.forecast, g.x, g.y)}"/>
+            <path class="known" d="${stepPath(g.known, g.x, g.y)}"/>
+            <path class="fc" d="${stepPath(g.forecast, g.x, g.y)}"/>
+          </g>
           <line class="now" y1="${M.top}" y2="${g.height - M.bottom}" visibility="hidden"/>
-          <line class="hair" y1="${M.top}" y2="${g.height - M.bottom}" visibility="hidden"/>
-        </svg>
-        <div class="tip" hidden></div>
-      </div>
-      ${this._config.show_table !== false ? this._table() : ""}
-    </ha-card>`;
-    const wrap = root.querySelector(".wrap");
-    wrap.addEventListener("pointermove", (e) => this._onPointer(e));
-    wrap.addEventListener("pointerleave", () => this._hideHover());
-    wrap.addEventListener("pointerdown", (e) => this._onPointer(e));
+          <line class="hair" y1="${M.top}" y2="${g.height - M.bottom}" visibility="hidden"/>`;
+    this._hideHover();
     this._updateNow();
-  }
-
-  _xTicks(g) {
-    // Local midnights inside the shown range.
-    const out = [];
-    let last = null;
-    for (let ms = g.t0; ms <= g.t1; ms += 15 * 60 * 1000) {
-      const key = new Intl.DateTimeFormat("en-CA", { timeZone: this._tz }).format(new Date(ms));
-      if (key !== last) {
-        if (last !== null) out.push(ms);
-        last = key;
-      }
-    }
-    return out;
   }
 
   _table() {
@@ -311,7 +379,7 @@ class DayAheadPriceForecastCard extends HTMLElement {
     const line = this.shadowRoot.querySelector(".now");
     if (!line || !this._g) return;
     const now = Date.now();
-    if (now < this._g.t0 || now > this._g.t1) {
+    if (now < this._g.v0 || now > this._g.v1) {
       line.setAttribute("visibility", "hidden");
       return;
     }
@@ -321,17 +389,102 @@ class DayAheadPriceForecastCard extends HTMLElement {
     line.setAttribute("visibility", "visible");
   }
 
-  _onPointer(e) {
+  // Pixels per svg unit, and the plot area width in svg units.
+  _metrics() {
+    const rect = this.shadowRoot.querySelector("svg").getBoundingClientRect();
+    return { rect, scale: this._g.width / (rect.width || this._g.width), plotW: this._g.width - M.left - M.right };
+  }
+
+  _timeAt(clientX) {
+    const { rect, scale, plotW } = this._metrics();
+    const px = (clientX - rect.left) * scale;
+    return this._g.v0 + ((px - M.left) / plotW) * (this._g.v1 - this._g.v0);
+  }
+
+  _onWheel(e) {
     if (!this._g || !this._model) return;
-    const svg = this.shadowRoot.querySelector("svg");
-    const rect = svg.getBoundingClientRect();
-    const scale = this._g.width / rect.width;
-    const px = (e.clientX - rect.left) * scale;
-    const tms = this._g.t0 + ((px - M.left) / (this._g.width - M.left - M.right)) * (this._g.t1 - this._g.t0);
-    const p = nearestPoint(this._model.all, tms);
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const factor = Math.exp(Math.max(-100, Math.min(100, e.deltaY)) * 0.002);
+      this._setView(zoomView(this._currentView(), factor, this._timeAt(e.clientX), this._bounds, MIN_SPAN_MS));
+      return;
+    }
+    const delta = e.shiftKey ? e.deltaX || e.deltaY : Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : 0;
+    if (!delta) return;
+    const v = this._currentView();
+    const { scale, plotW } = this._metrics();
+    this._setView(panView(v, ((delta * scale) / plotW) * (v.v1 - v.v0), this._bounds));
+  }
+
+  _onPointerDown(e) {
+    if (!this._g || !this._model || e.target.closest(".zoom")) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    this._pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (_) {
+      // Capture is optional; dragging still works while the pointer stays over the chart.
+    }
+    this._startGesture();
+    if (this._pointers.size === 1) this._showHover(e);
+  }
+
+  _startGesture() {
+    const pts = [...this._pointers.values()];
+    this._gesture = { view: this._currentView(), start: pts[0], moved: this._gesture ? this._gesture.moved : false };
+    if (pts.length >= 2) this._gesture.dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+  }
+
+  _onPointerMove(e) {
+    if (!this._g || !this._model) return;
+    const ptr = this._pointers.get(e.pointerId);
+    if (!ptr) {
+      if (e.pointerType !== "touch") this._showHover(e);
+      return;
+    }
+    ptr.x = e.clientX;
+    ptr.y = e.clientY;
+    const gst = this._gesture;
+    const pts = [...this._pointers.values()];
+    if (pts.length >= 2) {
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (gst.dist > 0 && dist > 0) {
+        const cx = (pts[0].x + pts[1].x) / 2;
+        this._hideHover();
+        gst.moved = true;
+        this._setView(zoomView(this._currentView(), gst.dist / dist, this._timeAt(cx), this._bounds, MIN_SPAN_MS));
+      }
+      gst.dist = dist;
+      return;
+    }
+    const dx = e.clientX - gst.start.x;
+    if (!gst.moved && Math.abs(dx) < DRAG_THRESHOLD_PX) return;
+    gst.moved = true;
+    this._hideHover();
+    this.shadowRoot.querySelector(".wrap").classList.add("grabbing");
+    const { scale, plotW } = this._metrics();
+    const span = gst.view.v1 - gst.view.v0;
+    this._setView(panView(gst.view, (-(dx * scale) / plotW) * span, this._bounds));
+  }
+
+  _onPointerEnd(e) {
+    if (!this._pointers.delete(e.pointerId)) return;
+    if (this._pointers.size) {
+      this._startGesture();
+      return;
+    }
+    this._gesture = null;
+    const wrap = this.shadowRoot.querySelector(".wrap");
+    if (wrap) wrap.classList.remove("grabbing");
+  }
+
+  _showHover(e) {
+    const { rect, scale } = this._metrics();
+    const visible = visibleSlice(this._model.all, this._g.v0, this._g.v1);
+    const p = nearestPoint(visible, this._timeAt(e.clientX));
     if (!p) return;
     const t = this._t;
-    const xx = this._g.x(p.start);
+    const xx = Math.min(this._g.width - M.right, Math.max(M.left, this._g.x(p.start)));
     const hair = this.shadowRoot.querySelector(".hair");
     hair.setAttribute("x1", xx);
     hair.setAttribute("x2", xx);

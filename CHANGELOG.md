@@ -10,7 +10,7 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 - Lovelace price chart card, served by the integration: published prices as a solid line, the forecast as a
   dashed line with a P10–P90 band per quarter hour, a hairline with tooltip, a now marker, a per-day table and
-  a configurable number of forecast days.
+  a configurable number of forecast days, and zoom and pan on the time axis to see the quarter-hour steps.
 
 ## [2026.11.0] - 2026-11-27
 

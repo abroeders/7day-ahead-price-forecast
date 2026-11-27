@@ -218,4 +218,69 @@ export function nearestPoint(points, t) {
   return cand;
 }
 
+/** Points that overlap the window [v0, v1]; points must be sorted and non-overlapping. */
+export function visibleSlice(points, v0, v1) {
+  let lo = 0;
+  let hi = points.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (points[mid].end <= v0) lo = mid + 1;
+    else hi = mid;
+  }
+  let end = lo;
+  while (end < points.length && points[end].start < v1) end++;
+  return points.slice(lo, end);
+}
+
+/** Keep the span (limited to [minSpanMs, full range]) and shift the window inside the bounds. */
+export function clampView(v0, v1, boundsMin, boundsMax, minSpanMs) {
+  const full = boundsMax - boundsMin;
+  const span = Math.min(full, Math.max(Math.min(minSpanMs, full), v1 - v0));
+  const start = Math.min(boundsMax - span, Math.max(boundsMin, v0));
+  return { v0: start, v1: start + span };
+}
+
+/** Scale the window span by factor (< 1 zooms in); the anchor keeps its relative position. */
+export function zoomView(view, factor, anchorT, bounds, minSpanMs) {
+  const span = view.v1 - view.v0;
+  const ratio = span > 0 ? (anchorT - view.v0) / span : 0.5;
+  const next = span * factor;
+  const v0 = anchorT - ratio * next;
+  return clampView(v0, v0 + next, bounds.min, bounds.max, minSpanMs);
+}
+
+/** Shift the window by dtMs, stopping at the bounds. */
+export function panView(view, dtMs, bounds) {
+  return clampView(view.v0 + dtMs, view.v1 + dtMs, bounds.min, bounds.max, view.v1 - view.v0);
+}
+
+const HOUR_STEPS = [1, 2, 3, 6, 12];
+
+/**
+ * X axis ticks for the window [v0, v1]: local midnights above 3 days, otherwise whole local hours
+ * at the smallest step that keeps ticks at least 60 px apart.
+ */
+export function xTicks(v0, v1, widthPx, timeZone) {
+  const span = v1 - v0;
+  const out = [];
+  if (!(span > 0)) return out;
+  if (span > 3 * 24 * HOUR_MS) {
+    const p = localParts(v0, timeZone);
+    for (let d = 0; ; d++) {
+      const ms = wallToInstant(p.year, p.month, p.day + d, 0, 0, timeZone);
+      if (ms > v1) break;
+      if (ms >= v0) out.push({ ms, kind: "day" });
+    }
+    return out;
+  }
+  const pxPerHour = (widthPx * HOUR_MS) / span;
+  const step = HOUR_STEPS.find((s) => s * pxPerHour >= 60) || HOUR_STEPS[HOUR_STEPS.length - 1];
+  for (let ms = Math.ceil(v0 / QUARTER_MS) * QUARTER_MS; ms <= v1; ms += QUARTER_MS) {
+    const p = localParts(ms, timeZone);
+    if (p.minute !== 0 || p.hour % step !== 0) continue;
+    out.push({ ms, kind: p.hour === 0 ? "day" : "hour" });
+  }
+  return out;
+}
+
 export { QUARTER_MS, HOUR_MS };

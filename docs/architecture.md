@@ -153,7 +153,8 @@ classDiagram
     +setConfig(config)
     +hass
     -draw()
-    -onPointer(event)
+    -onPointerMove(event)
+    -onWheel(event)
   }
   class DayAheadPriceForecastCardEditor
   class ChartCore {
@@ -164,6 +165,11 @@ classDiagram
     +bandPolygon()
     +dayStats()
     +nearestPoint()
+    +visibleSlice()
+    +clampView()
+    +zoomView()
+    +panView()
+    +xTicks()
   }
   DayAheadPriceForecastCard ..> ChartCore
   DayAheadPriceForecastCard --> DayAheadPriceForecastCardEditor : getConfigElement
@@ -182,6 +188,10 @@ sequenceDiagram
   U->>Card: pointermove
   Card->>Core: nearestPoint(time)
   Card->>Card: move hairline, show tooltip
+  U->>Card: Ctrl+wheel, pinch, drag or buttons
+  Card->>Core: zoomView / panView, clampView
+  Card->>Core: visibleSlice, yScale, xTicks
+  Card->>Card: redraw the window
 ```
 
 ## Design patterns
