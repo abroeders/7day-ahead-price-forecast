@@ -32,12 +32,13 @@ jobs:
         run: |
           if [ "${{ matrix.ha }}" = minimum ]; then
             minimum=$(python -c "import json; print(json.load(open('hacs.json'))['homeassistant'])")
-            pip install pytest pytest-asyncio pytest-homeassistant-custom-component home-assistant-frontend "homeassistant~=${minimum%.*}.0"
+            pip install pytest pytest-asyncio pytest-cov blockbuster pytest-homeassistant-custom-component home-assistant-frontend "homeassistant~=${minimum%.*}.0"
           else
-            pip install pytest pytest-asyncio pytest-homeassistant-custom-component home-assistant-frontend
+            pip install pytest pytest-asyncio pytest-cov blockbuster pytest-homeassistant-custom-component home-assistant-frontend
           fi
           pip show homeassistant | grep ^Version
-      - run: pytest -p no:cacheprovider
+      # fails below the minimum coverage in pyproject.toml
+      - run: pytest -p no:cacheprovider --cov
 
   card:  # the chart logic of the Lovelace card (Node is preinstalled on the runner)
     runs-on: ubuntu-latest
