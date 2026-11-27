@@ -20,6 +20,7 @@ from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
     TextSelector,
     TimeSelector,
 )
@@ -173,6 +174,7 @@ class ControllerSubentryFlow(ConfigSubentryFlow):
                     SelectSelectorConfig(
                         options=WEEKDAYS,
                         multiple=True,
+                        mode=SelectSelectorMode.LIST,  # keeps Monday..Sunday order
                         translation_key="weekday",
                     )
                 ),
