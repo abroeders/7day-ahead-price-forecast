@@ -1,30 +1,23 @@
 # Documentation site on GitHub Pages, built from docs/ by .github/workflows/docs.yml
-site_name: 7-Day-Ahead Price Forecast
-site_description: Home Assistant integration that forecasts day-ahead electricity prices seven days ahead
+site_name: Day-Ahead Price Forecast Service
+site_description: Public API of the 7-day day-ahead electricity price forecast
 site_url: https://abroeders.github.io/7day-ahead-price-forecast/
-repo_url: https://github.com/abroeders/7day-ahead-price-forecast
-repo_name: abroeders/7day-ahead-price-forecast
-edit_uri: edit/develop/docs/
 
 docs_dir: docs
 exclude_docs: |
+  architecture.md
   design/
   hooks.py
-  overrides/
   __pycache__/
 hooks:
   - docs/hooks.py
 
 nav:
   - Home: README.md
-  - Users:
-      - Forecast service API: forecast-service.md
-  - Developers:
-      - Architecture: architecture.md
+  - Forecast service API: forecast-service.md
 
 theme:
   name: material
-  custom_dir: docs/overrides  # partials/header.html: support button in the top bar
   features:
     - navigation.sections
     - navigation.top
@@ -52,15 +45,3 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-
-extra_css:
-  - stylesheets/extra.css
-
-extra:
-  social:
-    - icon: simple/buymeacoffee
-      link: https://www.buymeacoffee.com/abroeders
-      name: Support the development with a coffee
-    - icon: fontawesome/brands/github
-      link: https://github.com/abroeders/7day-ahead-price-forecast
-      name: Source code on GitHub
