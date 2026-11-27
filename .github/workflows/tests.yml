@@ -39,6 +39,12 @@ jobs:
           pip show homeassistant | grep ^Version
       - run: pytest -p no:cacheprovider
 
+  card:  # the chart logic of the Lovelace card (Node is preinstalled on the runner)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - run: node --test tests/card
+
   docs:  # the documentation site builds without broken links
     runs-on: ubuntu-latest
     steps:
