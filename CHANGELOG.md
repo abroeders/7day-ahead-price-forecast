@@ -6,11 +6,23 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 ## [Unreleased]
 
+## [2026.12.0] - 2026-11-27
+
 ### Added
 
 - Lovelace price chart card, served by the integration: published prices as a solid line, the forecast as a
   dashed line with a P10–P90 band per quarter hour, a hairline with tooltip, a now marker, a per-day table and
   a configurable number of forecast days, and zoom and pan on the time axis to see the quarter-hour steps.
+  The card is installed with the integration and needs no resource to be added by hand.
+- Documentation: a page for the card, automation and template examples (cheapest quarter hours and blocks of
+  several hours, with and without the band) and an accuracy page with the measured deviations against the
+  published day-ahead prices.
+
+### Changed
+
+- The documentation site now covers the integration only. Forecast day 1 is explicitly the first day after the
+  published day-ahead prices.
+- The README has screenshots, a feature list and the accuracy figures.
 
 ## [2026.11.0] - 2026-11-27
 
