@@ -2,10 +2,12 @@
 site_name: Day-Ahead Price Forecast
 site_description: Home Assistant integration, chart card and public API for the 7-day day-ahead electricity price forecast
 site_url: https://abroeders.github.io/7day-ahead-price-forecast/
+repo_url: https://github.com/abroeders/7day-ahead-price-forecast
 
 docs_dir: docs
 exclude_docs: |
   architecture.md
+  overrides/
   design/
   hooks.py
   __pycache__/
@@ -23,6 +25,7 @@ nav:
 
 theme:
   name: material
+  custom_dir: docs/overrides  # partials/header.html: support button in the top bar
   features:
     - navigation.sections
     - navigation.top
@@ -41,6 +44,18 @@ theme:
       toggle:
         icon: material/weather-sunny
         name: Light theme
+
+extra:
+  social:
+    - icon: simple/buymeacoffee
+      link: https://www.buymeacoffee.com/abroeders
+      name: Support the development with a coffee
+    - icon: fontawesome/brands/github
+      link: https://github.com/abroeders/7day-ahead-price-forecast
+      name: Source code on GitHub
+
+extra_css:
+  - stylesheets/extra.css
 
 markdown_extensions:
   - admonition

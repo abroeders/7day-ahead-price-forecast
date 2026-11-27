@@ -15,3 +15,10 @@ Quick start:
 ```bash
 curl -s --compressed "https://day-ahead-price-forecast.sendlab.nl/v1/forecast?zone=NL"
 ```
+
+## Support
+
+If this project is useful to you, please consider buying me a coffee. Your support lets me keep developing it.
+Thank you!
+
+<a href="https://www.buymeacoffee.com/abroeders"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" height="50"></a>
