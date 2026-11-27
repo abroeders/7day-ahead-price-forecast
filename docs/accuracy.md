@@ -3,6 +3,9 @@
 The forecast is checked against the **published day-ahead prices**: every quarter hour that was forecast is later
 compared with the price that was actually published.
 
+**Forecast day 1 is the first day after the published day-ahead prices**, day 2 the day after that, and so on up
+to day 7. The published prices themselves are not forecast: they are known.
+
 ![Average error per forecast day, compared with repeating the last known day](images/accuracy.svg)
 
 | Forecast day | Forecast (ct/kWh) | Last known day repeated (ct/kWh) | Smaller error |

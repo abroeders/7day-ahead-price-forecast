@@ -11,7 +11,7 @@ formula; it updates at every quarter hour. The attributes carry the whole series
 | `zone` | market zone, for example `NL` |
 | `known_until` | end of the last published price day; the forecast starts here |
 | `known` | published prices: `start`, `end`, `value` |
-| `forecast` | 7 days of quarter hours: `start`, `end`, `value` (median), `p10`, `p90` |
+| `forecast` | 7 forecast days of quarter hours, the first one being the day after the published prices: `start`, `end`, `value` (median), `p10`, `p90` |
 
 The `known` and `forecast` attributes are not stored in the recorder database. The [price chart card](card.md)
 reads them to draw the chart.
@@ -42,5 +42,5 @@ service over the last `hours` realised hours. They concern the **bare market pri
 | Band coverage | % | share of actual prices inside the P10–P90 band (about 80 % when calibrated) |
 
 The state is the average over the forecast days; the attribute `per_day` has the value for each day (`"1"` is the
-day after the last known price day) and `hours` the length of the measuring period. Without figures from the
+first forecast day: the day after the published day-ahead prices) and `hours` the length of the measuring period. Without figures from the
 service the state is *unknown*.

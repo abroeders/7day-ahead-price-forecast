@@ -2,8 +2,7 @@
 
 ## Requirements
 - Home Assistant 2026.3 or newer.
-- Internet access from Home Assistant to the forecast service (see [Forecast service API](forecast-service.md)).
-  No account or API key is needed.
+- Internet access from Home Assistant to the forecast service. No account or API key is needed.
 
 ## Install with HACS
 1. Open HACS, choose **Custom repositories** and add `https://github.com/abroeders/7day-ahead-price-forecast`
