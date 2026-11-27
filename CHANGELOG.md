@@ -6,6 +6,15 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 ## [Unreleased]
 
+### Changed
+
+- Installation: the steps describe the built-in Marketplace (*Add from link*, with a My Home Assistant button) for
+  Home Assistant 2026.11 and later; the HACS steps stay for older versions.
+
+### Added
+
+- Docs: a script that finds the cheapest block of consecutive hours in the coming days.
+
 ## [2026.11.2] - 2026-11-27
 
 ### Added

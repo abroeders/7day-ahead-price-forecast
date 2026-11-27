@@ -1,5 +1,6 @@
 # 7-Day-Ahead Price Forecast
 
+[![Marketplace: add from link](https://img.shields.io/badge/Marketplace-add%20from%20link-41BDF5.svg)](https://my.home-assistant.io/redirect/marketplace_repositories/)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
 [![License](https://img.shields.io/github/license/abroeders/7day-ahead-price-forecast)](LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://abroeders.github.io/7day-ahead-price-forecast/)
@@ -46,11 +47,13 @@ that are harder.
 ![Zoomed in: every quarter hour is a visible step](docs/images/card-zoomed.png)
 
 ## Installation
-1. In HACS choose **Custom repositories** and add `https://github.com/abroeders/7day-ahead-price-forecast` as
-   category *Integration* (or use the button below), then download **Day-ahead price forecast**.
+1. *Settings → Marketplace → Add from link* → `abroeders/7day-ahead-price-forecast` (type *Integration*) →
+   open it → **Install** (Home Assistant 2026.11 and later, or use the first button below). Before that: in HACS
+   choose **Custom repositories** and add the same repository as category *Integration* (second button).
 2. Restart Home Assistant and add the integration under **Settings → Devices & services**.
 3. Add a sub-controller with your formula and put the **Day-ahead price forecast** card on a dashboard.
 
+[![Open your Home Assistant instance and add a repository to the Marketplace.](https://my.home-assistant.io/badges/marketplace_repositories.svg)](https://my.home-assistant.io/redirect/marketplace_repositories/)
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=abroeders&repository=7day-ahead-price-forecast&category=integration)
 
 Requires Home Assistant 2026.3 or newer. Currently the Netherlands; more market zones can be added.
