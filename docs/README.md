@@ -6,6 +6,7 @@ Smart Energie of MNEXT. No account or API key is needed.
 
 | Page | What |
 |---|---|
+| [Installation](installation.md), [Configuration](configuration.md), [Entities](entities.md), [FAQ](faq.md) | the Home Assistant integration |
 | [Forecast service API](forecast-service.md) | endpoints, response fields, caching and failover, example calls, and how to read the forecast |
 
 Quick start:

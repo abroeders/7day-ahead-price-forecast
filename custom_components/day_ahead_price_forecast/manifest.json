@@ -1,0 +1,12 @@
+{
+  "domain": "day_ahead_price_forecast",
+  "name": "Day-ahead price forecast",
+  "codeowners": ["@abroeders"],
+  "config_flow": true,
+  "documentation": "https://github.com/abroeders/7day-ahead-price-forecast",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/abroeders/7day-ahead-price-forecast/issues",
+  "requirements": [],
+  "version": "2026.11.0"
+}

@@ -1,0 +1,105 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Day-ahead price forecast",
+        "description": "Kies de marktzone van de basiscontroller.",
+        "data": {
+          "zone": "Zone"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Deze zone is al ingesteld."
+    }
+  },
+  "config_subentries": {
+    "controller": {
+      "initiate_flow": {
+        "user": "Subcontroller toevoegen"
+      },
+      "entry_type": "Subcontroller",
+      "step": {
+        "user": {
+          "title": "Nieuwe subcontroller",
+          "description": "De prijs wordt berekend uit de kale marktprijs `P` (EUR/kWh), bijvoorbeeld `(P + 0.02 + 0.09) * 1.21`.",
+          "data": {
+            "name": "Naam",
+            "formula": "Formule",
+            "allow_negative": "Prijzen mogen negatief zijn"
+          }
+        },
+        "reconfigure": {
+          "title": "Subcontroller wijzigen",
+          "description": "De prijs wordt berekend uit de kale marktprijs `P` (EUR/kWh), bijvoorbeeld `(P + 0.02 + 0.09) * 1.21`.",
+          "data": {
+            "name": "Naam",
+            "formula": "Formule",
+            "allow_negative": "Prijzen mogen negatief zijn"
+          }
+        },
+        "variants": {
+          "title": "Variants",
+          "description": "Formule opgeslagen. {count} variant(en) ingesteld. Een variant vervangt de formule voor de kwartieren waarop hij past; de variant met de laatste startdatum wint.",
+          "menu_options": {
+            "add_variant": "Variant toevoegen",
+            "clear_variants": "Alle varianten verwijderen",
+            "done": "Afronden"
+          }
+        },
+        "add_variant": {
+          "title": "Nieuwe variant",
+          "description": "Laat een veld leeg voor geen voorwaarde. Tijden zijn lokaal; de eindtijd is exclusief.",
+          "data": {
+            "formula": "Formule",
+            "valid_from": "Geldig vanaf",
+            "start_time": "Starttijd",
+            "end_time": "Eindtijd",
+            "weekdays": "Weekdagen"
+          }
+        }
+      },
+      "error": {
+        "invalid_formula": "De formule is ongeldig of daalt als P stijgt.",
+        "time_range": "Geef zowel een start- als een eindtijd op."
+      },
+      "abort": {
+        "reconfigure_successful": "Subcontroller bijgewerkt."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "service_state": {
+        "name": "Voorspellingsdienst",
+        "state": {
+          "ok": "OK",
+          "stale": "Verouderd",
+          "unavailable": "Niet beschikbaar"
+        }
+      },
+      "accuracy_mae": {
+        "name": "Gemiddelde absolute fout"
+      },
+      "accuracy_bias": {
+        "name": "Afwijking (bias)"
+      },
+      "accuracy_coverage": {
+        "name": "Bandbreedtedekking"
+      }
+    }
+  },
+  "selector": {
+    "weekday": {
+      "options": {
+        "mon": "Maandag",
+        "tue": "Dinsdag",
+        "wed": "Woensdag",
+        "thu": "Donderdag",
+        "fri": "Vrijdag",
+        "sat": "Zaterdag",
+        "sun": "Zondag"
+      }
+    }
+  }
+}

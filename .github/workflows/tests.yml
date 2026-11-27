@@ -1,0 +1,52 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop, "feature/**", "fix/**"]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
+        with:
+          python-version: "3.13"
+      - run: pip install ruff
+      - run: ruff check .
+      - run: ruff format --check .
+
+  home-assistant:  # on the minimum version from hacs.json and on the latest version
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ha: [minimum, latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
+        with:
+          python-version: "3.14"  # the test plugin for 2026.3 and later needs Python 3.14
+      - name: Install Home Assistant
+        run: |
+          if [ "${{ matrix.ha }}" = minimum ]; then
+            minimum=$(python -c "import json; print(json.load(open('hacs.json'))['homeassistant'])")
+            pip install pytest pytest-asyncio pytest-homeassistant-custom-component "homeassistant~=${minimum%.*}.0"
+          else
+            pip install pytest pytest-asyncio pytest-homeassistant-custom-component
+          fi
+          pip show homeassistant | grep ^Version
+      - run: pytest -p no:cacheprovider
+
+  docs:  # the documentation site builds without broken links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements-docs.txt
+      - run: mkdocs build --strict
+        env:
+          NO_MKDOCS_2_WARNING: "1"
