@@ -26,14 +26,30 @@ classDiagram
     +p10
     +p90
   }
+  class Formula {
+    +evaluate(p) float
+    +is_monotonic() bool
+  }
   class FormulaParser {
-    +parse(text) Expression
+    <<function parse>>
+    +parse(text) Formula
+  }
+  class FormulaError {
+    +message
+    +position
+  }
+  class PriceCalculator {
+    -variants: list~FormulaVariant~
+    +allow_negative: bool
+    +apply(forecast) Forecast
   }
   class FormulaVariant {
     +valid_from
-    +time_of_day
+    +start_time
+    +end_time
     +weekdays
     +formula
+    +matches(start) bool
   }
   class SubController {
     +variants: list~FormulaVariant~
@@ -56,6 +72,10 @@ classDiagram
   BaseController "1" --> "*" SubController
   SubController --> FormulaVariant
   FormulaVariant --> FormulaParser
+  FormulaParser ..> Formula
+  FormulaParser ..> FormulaError
+  PriceCalculator --> FormulaVariant
+  SubController --> PriceCalculator
   ForecastProvider ..> Forecast
   Forecast --> PricePoint
 ```
