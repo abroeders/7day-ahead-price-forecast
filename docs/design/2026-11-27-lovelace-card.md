@@ -1,6 +1,6 @@
 # Design: Lovelace price chart card
 
-Status: **draft** (issue #8)
+Status: **approved** (issue #8)
 
 ## Goal
 A Lovelace card that charts the quarter-hour prices of one forecast sensor (sub-controller): published
