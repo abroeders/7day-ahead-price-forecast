@@ -1,9 +1,0 @@
-/* support button in the top bar: always visible, in Buy Me a Coffee's yellow on hover */
-.md-header__button.coffee {
-  display: inline-block;
-}
-
-.md-header__button.coffee:hover {
-  color: #ffdd00;
-  opacity: 1;
-}

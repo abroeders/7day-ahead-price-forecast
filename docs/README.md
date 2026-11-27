@@ -1,20 +1,15 @@
-# 7-Day-Ahead Price Forecast
+# Day-Ahead Price Forecast Service
 
-A Home Assistant integration that forecasts the day-ahead electricity price per hour for the days after the
-last known price day, with a P10–P90 uncertainty band. Price components such as energy tax, supplier markup
-and VAT are added by configurable sub-controllers, so the forecast entity shows the price you actually pay.
-
-!!! note "Work in progress"
-    The integration is being designed. See the [designs](design/) and the [architecture](architecture.md). The forecast comes from the forecast module of the Lectoraat Smart Energie of MNEXT.
+A public, read-only API that forecasts the day-ahead electricity price for the **7 days after the last known
+price day**, every 15 minutes, with a **P10–P90 uncertainty band**. It is the forecast module of the Lectoraat
+Smart Energie of MNEXT. No account or API key is needed.
 
 | Page | What |
 |---|---|
-| [Forecast service API](forecast-service.md) | endpoints, response fields, examples and how to read the forecast |
-| [Architecture](architecture.md) | code structure with UML diagrams, for developers |
-| [Designs](design/) | the design of each feature, as approved before it was built |
+| [Forecast service API](forecast-service.md) | endpoints, response fields, caching and failover, example calls, and how to read the forecast |
 
-## Support
+Quick start:
 
-If this project is useful to you, please consider buying me a coffee. Your support lets me keep developing it. Thank you!
-
-<a href="https://www.buymeacoffee.com/abroeders"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" height="50"></a>
+```bash
+curl -s --compressed "https://day-ahead-price-forecast.sendlab.nl/v1/forecast?zone=NL"
+```
