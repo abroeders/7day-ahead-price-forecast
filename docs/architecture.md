@@ -142,10 +142,53 @@ stateDiagram-v2
   Stored --> [*]: delete
 ```
 
+## Lovelace card
+The card is a plain JavaScript web component served by the integration. `async_setup` registers the static path
+and loads the module in every dashboard; the card reads the forecast sensor's attributes and draws an SVG.
+Pure chart logic lives in `chart-core.js` (tested with `node --test`).
+
+```mermaid
+classDiagram
+  class DayAheadPriceForecastCard {
+    +setConfig(config)
+    +hass
+    -draw()
+    -onPointer(event)
+  }
+  class DayAheadPriceForecastCardEditor
+  class ChartCore {
+    <<module>>
+    +cutForecast()
+    +yScale()
+    +stepPath()
+    +bandPolygon()
+    +dayStats()
+    +nearestPoint()
+  }
+  DayAheadPriceForecastCard ..> ChartCore
+  DayAheadPriceForecastCard --> DayAheadPriceForecastCardEditor : getConfigElement
+```
+
+```mermaid
+sequenceDiagram
+  participant HA as Home Assistant
+  participant Card
+  participant Core as chart-core
+  participant U as User
+  HA->>Card: hass (sensor changed)
+  Card->>Core: toPoints, cutForecast(forecast_days)
+  Card->>Core: yScale, stepPath, bandPolygon, dayStats
+  Card->>Card: draw SVG and table
+  U->>Card: pointermove
+  Card->>Core: nearestPoint(time)
+  Card->>Card: move hairline, show tooltip
+```
+
 ## Design patterns
 | Pattern | Where |
 |---|---|
 | Strategy | `ForecastProvider`, `ZonePlugin` |
 | Interpreter | `FormulaParser` |
+| Module (pure functions) | `chart-core.js`, the logic of the card |
 | Facade | `ForecastCoordinator` (one refresh shared by all sub-controllers) |
 | Chain of fallbacks | server list in `RemoteProvider`, shuffled per refresh (load spreading) |

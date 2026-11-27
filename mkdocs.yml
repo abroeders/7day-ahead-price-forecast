@@ -1,6 +1,6 @@
 # Documentation site on GitHub Pages, built from docs/ by .github/workflows/docs.yml
-site_name: Day-Ahead Price Forecast Service
-site_description: Public API of the 7-day day-ahead electricity price forecast
+site_name: Day-Ahead Price Forecast
+site_description: Home Assistant integration, chart card and public API for the 7-day day-ahead electricity price forecast
 site_url: https://abroeders.github.io/7day-ahead-price-forecast/
 
 docs_dir: docs
@@ -17,6 +17,7 @@ nav:
   - Installation: installation.md
   - Configuration: configuration.md
   - Entities: entities.md
+  - Price chart card: card.md
   - FAQ: faq.md
   - Forecast service API: forecast-service.md
 

@@ -9,6 +9,8 @@ should be treated as unreliable.
 **My formula is rejected.** Check that it only uses `P`, numbers, `+ - * /`, parentheses, `min` and `max`, and that
 it does not decrease when `P` increases. `-P` and `1 - P` are therefore invalid.
 
+**How do I chart the forecast?** Use the [price chart card](card.md); it needs no extra setup.
+
 **Which price does the forecast describe?** The bare day-ahead market price in EUR/kWh per quarter hour. Taxes,
 surcharges and VAT come from your formula.
 

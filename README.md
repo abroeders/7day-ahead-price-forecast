@@ -5,7 +5,16 @@
 Home Assistant integration and Lovelace card that forecast day-ahead electricity prices up to seven days
 ahead, with an uncertainty band.
 
-Work in progress.
+## Features
+- Forecast of the day-ahead electricity price per quarter hour for the 7 days after the last known price day,
+  with a P10–P90 band.
+- Sub-controllers with your own formula (surcharges, VAT, variants) on the market price.
+- Lovelace chart card: published prices as a solid line, the forecast dashed with its band, a hairline for
+  analysis and a per-day table. Shipped with the integration.
+
+## Documentation
+**Full user documentation: <https://abroeders.github.io/7day-ahead-price-forecast/>**: installation,
+configuration, entities, the chart card, FAQ and the forecast service API.
 
 ## Support
 
