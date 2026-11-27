@@ -26,44 +26,89 @@ classDiagram
     +p10
     +p90
   }
+  class Formula {
+    +evaluate(p) float
+    +is_monotonic() bool
+  }
   class FormulaParser {
-    +parse(text) Expression
+    <<function parse>>
+    +parse(text) Formula
   }
-  class FormulaVariant {
-    +valid_from
-    +time_of_day
-    +weekdays
-    +formula
+  class FormulaError {
+    +message
+    +position
   }
-  class SubController {
-    +variants: list~FormulaVariant~
+  class PriceCalculator {
+    -variants: list~FormulaVariant~
     +allow_negative: bool
     +apply(forecast) Forecast
   }
-  class BaseController {
-    +zone: ZonePlugin
-    +provider: ForecastProvider
+  class FormulaVariant {
+    +valid_from
+    +start_time
+    +end_time
+    +weekdays
+    +formula
+    +matches(start) bool
+  }
+  class ForecastCoordinator {
+    <<base controller>>
+    +zone: str
+    +node: str
+    -provider: ForecastProvider
     +refresh()
+  }
+  class ForecastSensor {
+    <<sub-controller, config subentry>>
+    -calculator: PriceCalculator
+    +native_value: current price
+    +attributes: known, forecast
+  }
+  class ServiceStateSensor {
+    +native_value: ok / stale / unavailable
+  }
+  class AccuracySensor {
+    <<diagnostic>>
+    +metric: mae / bias / coverage
+    +native_value: mean over the days
+    +attributes: per_day, hours
+  }
+  class ControllerSubentryFlow {
+    +validates formula
   }
   class ZonePlugin {
     <<interface>>
     +code
+    +name
+    +country
     +timezone
+    +currency
+    +is_valid_price(value) bool
   }
+  class NetherlandsZone
+  ZonePlugin <|.. NetherlandsZone
   ForecastProvider <|.. RemoteProvider
-  BaseController --> ForecastProvider
-  BaseController --> ZonePlugin
-  BaseController "1" --> "*" SubController
-  SubController --> FormulaVariant
+  ForecastCoordinator --> ForecastProvider
+  ForecastSensor --> ForecastCoordinator
+  ServiceStateSensor --> ForecastCoordinator
+  AccuracySensor --> ForecastCoordinator
+  ControllerSubentryFlow ..> FormulaParser
+  ForecastSensor --> FormulaVariant
   FormulaVariant --> FormulaParser
+  FormulaParser ..> Formula
+  FormulaParser ..> FormulaError
+  PriceCalculator --> FormulaVariant
+  ForecastSensor --> PriceCalculator
   ForecastProvider ..> Forecast
+  AccuracySensor ..> Forecast
   Forecast --> PricePoint
 ```
 
 ## Refresh with failover
 ```mermaid
 sequenceDiagram
-  participant C as Coordinator
+  participant C as ForecastCoordinator
+  participant Sensors as Forecast sensors
   participant P as RemoteProvider
   participant S1 as Server (picked at random)
   participant S2 as Other server
@@ -77,7 +122,24 @@ sequenceDiagram
     S2-->>P: forecast
   end
   P-->>C: Forecast
-  C->>C: each sub-controller applies its formula
+  C-->>Sensors: listeners notified
+  Sensors->>Sensors: each forecast sensor applies its formula
+```
+
+## Sub-controller lifecycle
+A sub-controller is a config subentry of the base controller entry. The config flow offers *Add sub-controller*
+(name, formula, "prices can be negative") followed by a menu to add variants (formula plus optional start date,
+time range and weekdays) and finish; every formula is parsed when submitted and rejected when invalid or
+decreasing. Variants are stored as JSON in the subentry and turned into `FormulaVariant` objects by the sensor. Changing a subentry reloads the entry, which rebuilds the sensors.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Form: add / reconfigure
+  Form --> Form: invalid formula
+  Form --> Stored: valid
+  Stored --> Loaded: entry reload
+  Loaded --> Stored: reconfigure
+  Stored --> [*]: delete
 ```
 
 ## Design patterns
@@ -85,5 +147,5 @@ sequenceDiagram
 |---|---|
 | Strategy | `ForecastProvider`, `ZonePlugin` |
 | Interpreter | `FormulaParser` |
-| Facade | `BaseController` |
+| Facade | `ForecastCoordinator` (one refresh shared by all sub-controllers) |
 | Chain of fallbacks | server list in `RemoteProvider`, shuffled per refresh (load spreading) |

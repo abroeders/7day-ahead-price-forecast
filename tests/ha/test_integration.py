@@ -1,0 +1,160 @@
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from custom_components.day_ahead_price_forecast.const import DOMAIN
+from custom_components.day_ahead_price_forecast.core.errors import ForecastError
+
+NOW = "2026-11-28T00:20:00+01:00"
+
+
+def _sub(formula="(P + 0.1) * 2", negative=True):
+    return ConfigSubentryData(
+        data={"formula": formula, "allow_negative": negative},
+        subentry_type="controller",
+        title="Purchase",
+        unique_id=None,
+    )
+
+
+async def test_config_flow_creates_entry_once(hass: HomeAssistant) -> None:
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"zone": "NL"})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Netherlands"
+    again = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    result = await hass.config_entries.flow.async_configure(again["flow_id"], {"zone": "NL"})
+    assert result["type"] is FlowResultType.ABORT
+
+
+async def test_subentry_flow_validates_formula(hass: HomeAssistant, entry, provider) -> None:
+    await hass.config_entries.async_setup(entry.entry_id)
+    flow = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "controller"), context={"source": "user"}
+    )
+    bad = await hass.config_entries.subentries.async_configure(
+        flow["flow_id"], {"name": "x", "formula": "-P", "allow_negative": True}
+    )
+    assert bad["errors"] == {"formula": "invalid_formula"}
+    menu = await hass.config_entries.subentries.async_configure(
+        flow["flow_id"], {"name": "Purchase", "formula": "(P+0.02)*1.21", "allow_negative": False}
+    )
+    assert menu["type"] is FlowResultType.MENU
+    form = await hass.config_entries.subentries.async_configure(
+        flow["flow_id"], {"next_step_id": "add_variant"}
+    )
+    bad = await hass.config_entries.subentries.async_configure(
+        form["flow_id"], {"formula": "P", "start_time": "07:00:00"}
+    )
+    assert bad["errors"] == {"start_time": "time_range"}
+    await hass.config_entries.subentries.async_configure(
+        form["flow_id"], {"formula": "P*2", "valid_from": "2029-01-01", "weekdays": ["sat"]}
+    )
+    ok = await hass.config_entries.subentries.async_configure(
+        flow["flow_id"], {"next_step_id": "done"}
+    )
+    assert ok["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    sub = next(iter(entry.subentries.values()))
+    assert sub.title == "Purchase"
+    assert sub.data == {
+        "formula": "(P+0.02)*1.21",
+        "allow_negative": False,
+        "variants": [{"formula": "P*2", "valid_from": "2029-01-01", "weekdays": ["sat"]}],
+    }
+
+
+async def test_forecast_sensor(hass: HomeAssistant, provider, freezer) -> None:
+    freezer.move_to(NOW)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"zone": "NL"},
+        unique_id="NL",
+        title="Netherlands",
+        subentries_data=[_sub()],
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    sensors = [s for s in hass.states.async_all("sensor") if "forecast" in s.attributes]
+    assert len(sensors) == 1
+    state = sensors[0]
+    assert float(state.state) == (0.16 + 0.1) * 2
+    assert state.attributes["forecast"][0]["p10"] == (0.1 + 0.1) * 2
+    assert len(state.attributes["forecast"]) == 2
+
+
+async def test_service_state_and_failure(hass: HomeAssistant, entry, provider) -> None:
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    reg = er.async_get(hass)
+    ent = next(e for e in reg.entities.values() if e.unique_id.endswith("service_state"))
+    state = hass.states.get(ent.entity_id)
+    assert state.state == "ok"
+    assert state.attributes["node"] == "a"
+
+
+async def test_setup_retries_when_service_down(hass: HomeAssistant, entry, provider) -> None:
+    provider.error = ForecastError("down")
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state.name == "SETUP_RETRY"
+
+
+async def test_variant_applies(hass: HomeAssistant, provider, freezer) -> None:
+    freezer.move_to(NOW)  # 2026-11-28 is a Saturday
+    sub = ConfigSubentryData(
+        data={
+            "formula": "P",
+            "allow_negative": True,
+            "variants": [{"formula": "P*10", "weekdays": ["sat"]}],
+        },
+        subentry_type="controller",
+        title="Weekend",
+        unique_id=None,
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"zone": "NL"}, unique_id="NL", title="NL", subentries_data=[sub]
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    state = next(s for s in hass.states.async_all("sensor") if "forecast" in s.attributes)
+    assert float(state.state) == 0.16 * 10
+
+
+async def test_accuracy_sensors(hass: HomeAssistant, entry, provider) -> None:
+    provider.payload["accuracy"] = {
+        "mae": {"1": 0.02, "2": 0.03},
+        "bias": {"1": -0.004, "2": 0.002},
+        "coverage": {"1": 0.8, "2": 0.7, "x": 1, "3": "bad"},
+        "hours": 600,
+    }
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    reg = er.async_get(hass)
+
+    def state(metric):
+        ent = next(e for e in reg.entities.values() if e.unique_id.endswith(f"accuracy_{metric}"))
+        return hass.states.get(ent.entity_id)
+
+    mae = state("mae")
+    assert float(mae.state) == 2.5
+    assert mae.attributes["unit_of_measurement"] == "ct/kWh"
+    assert mae.attributes["per_day"] == {"1": 2.0, "2": 3.0}
+    assert mae.attributes["hours"] == 600
+    assert float(state("bias").state) == -0.1
+    coverage = state("coverage")
+    assert float(coverage.state) == 75.0
+    assert coverage.attributes["per_day"] == {"1": 80.0, "2": 70.0}
+
+
+async def test_accuracy_sensors_without_data(hass: HomeAssistant, entry, provider) -> None:
+    provider.payload.pop("accuracy", None)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    reg = er.async_get(hass)
+    ent = next(e for e in reg.entities.values() if e.unique_id.endswith("accuracy_mae"))
+    assert hass.states.get(ent.entity_id).state == "unknown"
