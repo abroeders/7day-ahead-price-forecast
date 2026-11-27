@@ -3,3 +3,5 @@ pytest-asyncio
 ruff
 pytest-homeassistant-custom-component
 home-assistant-frontend
+blockbuster
+pytest-cov

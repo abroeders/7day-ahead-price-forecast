@@ -6,6 +6,13 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 ## [Unreleased]
 
+### Added
+
+- A test that runs the integration's lifecycle under `blockbuster`, so a blocking call in the event loop fails
+  the build.
+- SonarCloud analysis settings, a minimum test coverage of 94% in CI and weekly Dependabot updates of the
+  GitHub Actions.
+
 ### Changed
 
 - Installation: the steps describe the built-in Marketplace (*Add from link*, with a My Home Assistant button) for
