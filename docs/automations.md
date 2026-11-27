@@ -104,6 +104,84 @@ The `time` trigger accepts a timestamp sensor and follows it when it changes. Ke
 from *now* on: once the block has started, the sensor moves on to the next cheapest block, which is why the
 automation above switches off after a fixed delay instead of waiting for the sensor.
 
+## A script for the cheapest moment of the coming week
+A reusable script that returns the cheapest block within the published prices and the forecast. Create it in
+**Settings → Automations & Scenes → Scripts → Add script → Edit in YAML**. It has two fields: the length of the
+block in hours (`hours`) and how many days ahead to look (`days`, at most 7):
+
+```yaml
+script:
+  cheapest_moment:
+    alias: Cheapest moment
+    description: Finds the cheapest block of consecutive hours in the coming days.
+    fields:
+      hours:
+        name: Block length (hours)
+        default: 3
+        selector:
+          number: { min: 0.25, max: 24, step: 0.25, unit_of_measurement: h }
+      days:
+        name: Days ahead
+        default: 7
+        selector:
+          number: { min: 1, max: 7, mode: box }
+    sequence:
+      - variables:
+          result: >
+            {% set n = (hours | float(3) * 4) | round(0) | int %}
+            {% set now_ts = now().timestamp() %}
+            {% set until = now_ts + 86400 * (days | int(7)) %}
+            {% set data = (state_attr('sensor.purchase', 'known') or []) + (state_attr('sensor.purchase', 'forecast') or []) %}
+            {% set ns = namespace(items=[], best=none, best_avg=none) %}
+            {% for p in data if as_timestamp(p.end) > now_ts and as_timestamp(p.start) < until %}
+              {% set ns.items = ns.items + [p] %}
+            {% endfor %}
+            {% for i in range(0, ns.items | length - n + 1) %}
+              {% set avg = ns.items[i:i + n] | map(attribute='value') | sum / n %}
+              {% if ns.best_avg is none or avg < ns.best_avg %}
+                {% set ns.best = i %}
+                {% set ns.best_avg = avg %}
+              {% endif %}
+            {% endfor %}
+            {% if ns.best is none %}
+              {{ {'found': false} }}
+            {% else %}
+              {{ {
+                'found': true,
+                'start': ns.items[ns.best].start,
+                'end': ns.items[ns.best + n - 1].end,
+                'average': ns.best_avg | round(4),
+                'is_forecast': ns.items[ns.best:ns.best + n] | selectattr('p10', 'defined') | list | length > 0
+              } }}
+            {% endif %}
+      - stop: Done
+        response_variable: result
+```
+
+Run it from **Developer tools → Actions** (`script.cheapest_moment`) to see the response, or call it from an
+automation and use the answer:
+
+```yaml
+actions:
+  - action: script.cheapest_moment
+    data:
+      hours: 4
+      days: 7
+    response_variable: cheapest
+  - condition: template
+    value_template: "{{ cheapest.found }}"
+  - action: notify.mobile_app_phone
+    data:
+      message: >
+        Cheapest 4 hours this week: {{ cheapest.start | as_datetime | as_local }}
+        ({{ (cheapest.average * 100) | round(1) }} ct/kWh).
+```
+
+The response holds `start`, `end`, `average` (in the unit of the sensor) and `is_forecast`, which is `true` when
+the block includes forecast quarter hours and therefore may still move. Published prices cover only about one
+day, so for a longer look ahead the answer is mostly based on the forecast; run the script again after every
+refresh, or after about 13:00 when the next day is published.
+
 ## Below a price limit
 A binary sensor that is on while the current quarter hour is cheaper than the average of the next 24 hours:
 
