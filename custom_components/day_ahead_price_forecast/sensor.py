@@ -14,7 +14,8 @@ from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_ALLOW_NEGATIVE, CONF_FORMULA, DOMAIN
+from .config_flow import variant_from_dict
+from .const import CONF_ALLOW_NEGATIVE, CONF_FORMULA, CONF_VARIANTS, DOMAIN
 from .coordinator import ForecastConfigEntry, ForecastCoordinator
 from .core.models import Forecast, PricePoint
 from .core.pricing import PriceCalculator
@@ -76,7 +77,11 @@ class ForecastSensor(CoordinatorEntity[ForecastCoordinator], SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
         )
         self._calculator = PriceCalculator(
-            [FormulaVariant(formula=data[CONF_FORMULA])], data[CONF_ALLOW_NEGATIVE]
+            [
+                FormulaVariant(formula=data[CONF_FORMULA]),
+                *(variant_from_dict(v) for v in data.get(CONF_VARIANTS, [])),
+            ],
+            data[CONF_ALLOW_NEGATIVE],
         )
         self._source: Forecast | None = None
         self._priced: Forecast | None = None

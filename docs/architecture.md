@@ -120,8 +120,9 @@ sequenceDiagram
 
 ## Sub-controller lifecycle
 A sub-controller is a config subentry of the base controller entry. The config flow offers *Add sub-controller*
-(name, formula, "prices can be negative"); the formula is parsed while the form is submitted and rejected when
-invalid or decreasing. Changing a subentry reloads the entry, which rebuilds the sensors.
+(name, formula, "prices can be negative") followed by a menu to add variants (formula plus optional start date,
+time range and weekdays) and finish; every formula is parsed when submitted and rejected when invalid or
+decreasing. Variants are stored as JSON in the subentry and turned into `FormulaVariant` objects by the sensor. Changing a subentry reloads the entry, which rebuilds the sensors.
 
 ```mermaid
 stateDiagram-v2

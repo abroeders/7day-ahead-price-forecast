@@ -39,14 +39,32 @@ async def test_subentry_flow_validates_formula(hass: HomeAssistant, entry, provi
         flow["flow_id"], {"name": "x", "formula": "-P", "allow_negative": True}
     )
     assert bad["errors"] == {"formula": "invalid_formula"}
-    ok = await hass.config_entries.subentries.async_configure(
+    menu = await hass.config_entries.subentries.async_configure(
         flow["flow_id"], {"name": "Purchase", "formula": "(P+0.02)*1.21", "allow_negative": False}
+    )
+    assert menu["type"] is FlowResultType.MENU
+    form = await hass.config_entries.subentries.async_configure(
+        flow["flow_id"], {"next_step_id": "add_variant"}
+    )
+    bad = await hass.config_entries.subentries.async_configure(
+        form["flow_id"], {"formula": "P", "start_time": "07:00:00"}
+    )
+    assert bad["errors"] == {"start_time": "time_range"}
+    await hass.config_entries.subentries.async_configure(
+        form["flow_id"], {"formula": "P*2", "valid_from": "2029-01-01", "weekdays": ["sat"]}
+    )
+    ok = await hass.config_entries.subentries.async_configure(
+        flow["flow_id"], {"next_step_id": "done"}
     )
     assert ok["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     sub = next(iter(entry.subentries.values()))
     assert sub.title == "Purchase"
-    assert sub.data == {"formula": "(P+0.02)*1.21", "allow_negative": False}
+    assert sub.data == {
+        "formula": "(P+0.02)*1.21",
+        "allow_negative": False,
+        "variants": [{"formula": "P*2", "valid_from": "2029-01-01", "weekdays": ["sat"]}],
+    }
 
 
 async def test_forecast_sensor(hass: HomeAssistant, provider, freezer) -> None:
@@ -83,3 +101,25 @@ async def test_setup_retries_when_service_down(hass: HomeAssistant, entry, provi
     provider.error = ForecastError("down")
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state.name == "SETUP_RETRY"
+
+
+async def test_variant_applies(hass: HomeAssistant, provider, freezer) -> None:
+    freezer.move_to(NOW)  # 2026-11-28 is a Saturday
+    sub = ConfigSubentryData(
+        data={
+            "formula": "P",
+            "allow_negative": True,
+            "variants": [{"formula": "P*10", "weekdays": ["sat"]}],
+        },
+        subentry_type="controller",
+        title="Weekend",
+        unique_id=None,
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"zone": "NL"}, unique_id="NL", title="NL", subentries_data=[sub]
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    state = next(s for s in hass.states.async_all("sensor") if "forecast" in s.attributes)
+    assert float(state.state) == 0.16 * 10

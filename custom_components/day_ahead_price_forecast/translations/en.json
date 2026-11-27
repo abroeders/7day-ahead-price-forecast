@@ -37,10 +37,31 @@
             "formula": "Formula",
             "allow_negative": "Prices can be negative"
           }
+        },
+        "variants": {
+          "title": "Variants",
+          "description": "Formula saved. {count} variant(s) defined. A variant replaces the formula for the quarter hours it matches; the variant with the latest start date wins.",
+          "menu_options": {
+            "add_variant": "Add variant",
+            "clear_variants": "Remove all variants",
+            "done": "Finish"
+          }
+        },
+        "add_variant": {
+          "title": "New variant",
+          "description": "Leave a field empty for no condition. Times are local; the end time is exclusive.",
+          "data": {
+            "formula": "Formula",
+            "valid_from": "Valid from",
+            "start_time": "Start time",
+            "end_time": "End time",
+            "weekdays": "Weekdays"
+          }
         }
       },
       "error": {
-        "invalid_formula": "The formula is not valid, or decreases when P increases."
+        "invalid_formula": "The formula is not valid, or decreases when P increases.",
+        "time_range": "Give both a start and an end time."
       },
       "abort": {
         "reconfigure_successful": "Sub-controller updated."
@@ -56,6 +77,19 @@
           "stale": "Stale",
           "unavailable": "Unavailable"
         }
+      }
+    }
+  },
+  "selector": {
+    "weekday": {
+      "options": {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
       }
     }
   }

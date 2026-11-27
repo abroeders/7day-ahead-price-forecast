@@ -12,6 +12,7 @@ DEFAULT_SERVERS = (
 CONF_ZONE = "zone"
 CONF_FORMULA = "formula"
 CONF_ALLOW_NEGATIVE = "allow_negative"
+CONF_VARIANTS = "variants"
 
 SUBENTRY_CONTROLLER = "controller"
 DEFAULT_FORMULA = "P"

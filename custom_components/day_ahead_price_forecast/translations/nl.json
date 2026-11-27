@@ -37,10 +37,31 @@
             "formula": "Formule",
             "allow_negative": "Prijzen mogen negatief zijn"
           }
+        },
+        "variants": {
+          "title": "Variants",
+          "description": "Formule opgeslagen. {count} variant(en) ingesteld. Een variant vervangt de formule voor de kwartieren waarop hij past; de variant met de laatste startdatum wint.",
+          "menu_options": {
+            "add_variant": "Variant toevoegen",
+            "clear_variants": "Alle varianten verwijderen",
+            "done": "Afronden"
+          }
+        },
+        "add_variant": {
+          "title": "Nieuwe variant",
+          "description": "Laat een veld leeg voor geen voorwaarde. Tijden zijn lokaal; de eindtijd is exclusief.",
+          "data": {
+            "formula": "Formule",
+            "valid_from": "Geldig vanaf",
+            "start_time": "Starttijd",
+            "end_time": "Eindtijd",
+            "weekdays": "Weekdagen"
+          }
         }
       },
       "error": {
-        "invalid_formula": "De formule is ongeldig of daalt als P stijgt."
+        "invalid_formula": "De formule is ongeldig of daalt als P stijgt.",
+        "time_range": "Geef zowel een start- als een eindtijd op."
       },
       "abort": {
         "reconfigure_successful": "Subcontroller bijgewerkt."
@@ -56,6 +77,19 @@
           "stale": "Verouderd",
           "unavailable": "Niet beschikbaar"
         }
+      }
+    }
+  },
+  "selector": {
+    "weekday": {
+      "options": {
+        "mon": "Maandag",
+        "tue": "Dinsdag",
+        "wed": "Woensdag",
+        "thu": "Donderdag",
+        "fri": "Vrijdag",
+        "sat": "Zaterdag",
+        "sun": "Zondag"
       }
     }
   }
