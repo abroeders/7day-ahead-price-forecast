@@ -6,7 +6,7 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 ## [Unreleased]
 
-## [2026.12.0] - 2026-11-27
+## [2026.11.1] - 2026-11-27
 
 ### Added
 
