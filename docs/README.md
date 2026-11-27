@@ -1,8 +1,8 @@
 # Day-Ahead Price Forecast
 
-A Home Assistant integration with a chart card, on top of a public, read-only API that forecasts the day-ahead electricity price for the **7 days after the last known
-price day**, every 15 minutes, with a **P10–P90 uncertainty band**. It is the forecast module of the Lectoraat
-Smart Energie of MNEXT. No account or API key is needed.
+A Home Assistant integration that forecasts the day-ahead electricity price per quarter hour for the **7 days
+after the last known price day**, with a **P10–P90 uncertainty band**, and a Lovelace chart card that shows it. The
+forecast comes from the forecast module of the Lectoraat Smart Energie of MNEXT. No account or API key is needed.
 
 | Page | What |
 |---|---|
@@ -15,12 +15,6 @@ Smart Energie of MNEXT. No account or API key is needed.
 Add the [price chart card](card.md) to a dashboard to see it:
 
 ![The price chart card](images/card.png)
-
-Quick start for the API:
-
-```bash
-curl -s --compressed "https://day-ahead-price-forecast.sendlab.nl/v1/forecast?zone=NL"
-```
 
 ## Support
 
