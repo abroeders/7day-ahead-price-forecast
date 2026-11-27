@@ -158,3 +158,16 @@ async def test_accuracy_sensors_without_data(hass: HomeAssistant, entry, provide
     reg = er.async_get(hass)
     ent = next(e for e in reg.entities.values() if e.unique_id.endswith("accuracy_mae"))
     assert hass.states.get(ent.entity_id).state == "unknown"
+
+
+async def test_card_is_served_and_loaded(hass: HomeAssistant, entry, provider) -> None:
+    from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL
+
+    from custom_components.day_ahead_price_forecast import CARD_URL, WWW_DIR
+
+    assert (WWW_DIR / "day-ahead-price-forecast-card.js").is_file()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    urls = hass.data[DATA_EXTRA_MODULE_URL].urls
+    assert any(u.startswith(CARD_URL) for u in urls)
