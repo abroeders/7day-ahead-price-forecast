@@ -1,6 +1,8 @@
 import {
   toPoints,
+  clampDays,
   cutForecast,
+  integrationDays,
   yScale,
   linearScale,
   stepPath,
@@ -30,7 +32,7 @@ const LABELS = {
     noData: "No data available",
     notFound: "Entity not found",
     entity: "Entity",
-    forecastDays: "Forecast days (1-7)",
+    forecastDays: "Forecast days (1-{max})",
     description: "Chart of published and forecast day-ahead prices",
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
@@ -47,7 +49,7 @@ const LABELS = {
     noData: "Geen gegevens beschikbaar",
     notFound: "Entiteit niet gevonden",
     entity: "Entiteit",
-    forecastDays: "Verwachtingsdagen (1-7)",
+    forecastDays: "Verwachtingsdagen (1-{max})",
     description: "Grafiek van gepubliceerde en verwachte day-ahead-prijzen",
     zoomIn: "Inzoomen",
     zoomOut: "Uitzoomen",
@@ -63,12 +65,6 @@ const DRAG_THRESHOLD_PX = 4;
 
 function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-}
-
-function clampDays(v) {
-  const n = Math.round(Number(v));
-  if (!Number.isFinite(n)) return 7;
-  return Math.min(7, Math.max(1, n));
 }
 
 class DayAheadPriceForecastCard extends HTMLElement {
@@ -169,7 +165,7 @@ class DayAheadPriceForecastCard extends HTMLElement {
           : forecast.length
             ? forecast[0].start
             : null;
-      if (from !== null) forecast = cutForecast(forecast, from, this._config.forecast_days, this._tz);
+      if (from !== null) forecast = cutForecast(forecast, from, clampDays(this._config.forecast_days, integrationDays(a)), this._tz);
       forecast.forEach((p) => (p.isForecast = true));
       this._model = {
         known,
@@ -580,11 +576,12 @@ class DayAheadPriceForecastCardEditor extends HTMLElement {
       this._form.addEventListener("value-changed", (e) => {
         e.stopPropagation();
         const v = e.detail.value || {};
-        this._fire({ ...this._config, entity: v.entity, forecast_days: clampDays(v.forecast_days) });
+        this._fire({ ...this._config, entity: v.entity, forecast_days: clampDays(v.forecast_days, this._max) });
       });
       this.appendChild(this._form);
     }
-    this._labels = { entity: t.entity, forecast_days: t.forecastDays };
+    const max = (this._max = integrationDays(((this._hass.states || {})[this._config.entity] || {}).attributes));
+    this._labels = { entity: t.entity, forecast_days: t.forecastDays.replace("{max}", max) };
     this._form.hass = this._hass;
     this._form.schema = [
       {
@@ -592,11 +589,11 @@ class DayAheadPriceForecastCardEditor extends HTMLElement {
         required: true,
         selector: { entity: { domain: "sensor", filter: { domain: "sensor" } } },
       },
-      { name: "forecast_days", selector: { number: { min: 1, max: 7, step: 1, mode: "box" } } },
+      { name: "forecast_days", selector: { number: { min: 1, max, step: 1, mode: "box" } } },
     ];
     this._form.data = {
       entity: this._config.entity || "",
-      forecast_days: this._config.forecast_days ?? 7,
+      forecast_days: clampDays(this._config.forecast_days ?? max, max),
     };
   }
 

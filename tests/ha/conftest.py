@@ -18,7 +18,7 @@ class FakeProvider:
         self.last_node = "a"
         self.error = None
 
-    async def fetch(self, zone):
+    async def fetch(self, zone, days=7):
         if self.error:
             raise self.error
         return Forecast.from_dict(self.payload)

@@ -3,14 +3,28 @@
     "step": {
       "user": {
         "title": "Day-ahead price forecast",
-        "description": "Kies de marktzone van de basiscontroller.",
+        "description": "Kies de marktzone van de basiscontroller en hoeveel verwachtingsdagen worden opgehaald.",
         "data": {
-          "zone": "Zone"
+          "zone": "Zone",
+          "forecast_days": "Verwachtingsdagen"
+        },
+        "data_description": {
+          "forecast_days": "Aantal dagen na de laatste bekende prijsdag (1-7). Minder dagen betekent minder data."
+        }
+      },
+      "reconfigure": {
+        "title": "Verwachtingsdagen",
+        "data": {
+          "forecast_days": "Verwachtingsdagen"
+        },
+        "data_description": {
+          "forecast_days": "Aantal verwachtingsdagen dat wordt opgehaald en getoond (1-7). De Lovelace-kaart is hiertoe begrensd."
         }
       }
     },
     "abort": {
-      "already_configured": "Deze zone is al ingesteld."
+      "already_configured": "Deze zone is al ingesteld.",
+      "reconfigure_successful": "Instellingen opgeslagen."
     }
   },
   "config_subentries": {

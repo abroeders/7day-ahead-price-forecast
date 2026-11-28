@@ -171,3 +171,33 @@ async def test_card_is_served_and_loaded(hass: HomeAssistant, entry, provider) -
     await hass.async_block_till_done()
     urls = hass.data[DATA_EXTRA_MODULE_URL].urls
     assert any(u.startswith(CARD_URL) for u in urls)
+
+
+async def test_forecast_days_limits_sensor(hass: HomeAssistant, provider, freezer) -> None:
+    freezer.move_to(NOW)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"zone": "NL", "forecast_days": 1},
+        unique_id="NL",
+        title="Netherlands",
+        subentries_data=[_sub()],
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    state = next(s for s in hass.states.async_all("sensor") if "forecast" in s.attributes)
+    assert state.attributes["forecast_days"] == 1
+    assert len(state.attributes["forecast"]) == 2
+
+
+async def test_reconfigure_forecast_days(hass: HomeAssistant, entry, provider) -> None:
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"forecast_days": 3})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data["forecast_days"] == 3
+    await hass.async_block_till_done()
+    assert entry.runtime_data.forecast_days == 3
