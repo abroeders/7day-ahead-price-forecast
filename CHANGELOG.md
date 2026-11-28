@@ -6,6 +6,8 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 ## [Unreleased]
 
+## [2026.11.4] - 2026-11-28
+
 ### Changed
 
 - Installation: the integration is in the Marketplace by default, so the steps no longer start with *Add from
