@@ -51,6 +51,10 @@ The contract between integration and service (with a schema version in the respo
 carries, per quarter hour: start, end, value, P10, P90 and the number of days ahead; the known prices up to now; the
 state of the service; and the accuracy figures. All prices are bare market prices in EUR/kWh.
 
+A request may carry the optional query parameter `days` (1 to 7, default all 7): the service then returns only the
+forecast of that many calendar days after the last known price day, to save data. The number is a setting of the
+base controller; see [the design of the forecast days setting](2026-11-28-forecast-days.md).
+
 ## Formulas
 A recursive-descent parser in pure Python (never `eval`). Grammar: numbers (decimal comma or point), `P`,
 `+ − * ×  /`, parentheses, unary minus, `min()` and `max()`. A formula must not decrease when `P` increases,
