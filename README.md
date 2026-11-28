@@ -1,6 +1,7 @@
 # 7-Day-Ahead Price Forecast
 
-[![Marketplace: add from link](https://img.shields.io/badge/Marketplace-add%20from%20link-41BDF5.svg)](https://my.home-assistant.io/redirect/marketplace_repositories/)
+[![Marketplace: default](https://img.shields.io/badge/Marketplace-default-41BDF5.svg)](docs/installation.md)
+[![Release](https://img.shields.io/github/v/release/abroeders/7day-ahead-price-forecast)](https://github.com/abroeders/7day-ahead-price-forecast/releases)
 [![HACS](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz)
 [![License](https://img.shields.io/github/license/abroeders/7day-ahead-price-forecast)](LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://abroeders.github.io/7day-ahead-price-forecast/)
