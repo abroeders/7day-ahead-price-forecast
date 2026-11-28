@@ -47,7 +47,7 @@ async def test_fetch_ok(payload):
     forecast = await p.fetch("NL")
     assert forecast.zone == "NL"
     assert len(http.calls) == 1
-    assert http.calls[0][0].endswith("/v1/forecast?zone=NL")
+    assert http.calls[0][0].endswith("/v1/forecast?zone=NL&days=7")
     assert http.calls[0][1] == 5.0
     assert p.last_node == forecast.node
 
@@ -143,3 +143,9 @@ async def test_last_node_kept_after_failed_fetch(payload):
     with pytest.raises(ForecastError):
         await p.fetch("NL")
     assert p.last_node == "a"
+
+
+async def test_requests_days(payload):
+    http = FakeHttp({A: ok(payload), B: ok(payload)})
+    await provider(http).fetch("NL", 2)
+    assert all(call[0].endswith("zone=NL&days=2") for call in http.calls)

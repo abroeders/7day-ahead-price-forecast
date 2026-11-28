@@ -16,6 +16,7 @@ HttpGet = Callable[[str, float], Awaitable[tuple[int, bytes]]]
 
 DEFAULT_MAX_AGE = timedelta(hours=3)
 DEFAULT_TIMEOUT = 5.0
+MAX_DAYS = 7
 
 
 def _utcnow() -> datetime:
@@ -45,12 +46,12 @@ class RemoteProvider:
         """Node name of the server that served the last successful fetch."""
         return self._last_node
 
-    async def fetch(self, zone: str) -> Forecast:
+    async def fetch(self, zone: str, days: int = MAX_DAYS) -> Forecast:
         servers = list(self._servers)
         self._rng.shuffle(servers)
         reasons: list[str] = []
         for base in servers:
-            url = f"{base.rstrip('/')}/v1/forecast?zone={quote(zone)}"
+            url = f"{base.rstrip('/')}/v1/forecast?zone={quote(zone)}&days={days}"
             try:
                 status, body = await asyncio.wait_for(
                     self._http_get(url, self._timeout), self._timeout

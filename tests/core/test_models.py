@@ -1,9 +1,13 @@
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
 
 from custom_components.day_ahead_price_forecast.core.errors import ForecastError
 from custom_components.day_ahead_price_forecast.core.models import Forecast
+
+AMS = ZoneInfo("Europe/Amsterdam")
 
 
 def test_parses_sample(payload):
@@ -77,3 +81,44 @@ def test_band_violation(payload, p10, value, p90):
 def test_band_edges_allowed(payload):
     payload["forecast"][0].update(p10=0.15, value=0.15, p90=0.15)
     assert Forecast.from_dict(payload).points[0].p10 == 0.15
+
+
+def _spread(payload, days):
+    """Forecast with one point per day, starting at known_until."""
+    start = datetime.fromisoformat(payload["known_until"])
+    payload["forecast"] = [
+        {
+            "start": (start + timedelta(days=d)).isoformat(),
+            "end": (start + timedelta(days=d, minutes=15)).isoformat(),
+            "value": 0.1,
+            "p10": 0.05,
+            "p90": 0.2,
+            "h": d + 1,
+        }
+        for d in range(days)
+    ]
+    return Forecast.from_dict(payload)
+
+
+@pytest.mark.parametrize(("days", "expected"), [(1, 1), (2, 2), (7, 7), (10, 7)])
+def test_limited_to_cuts_after_days(payload, days, expected):
+    forecast = _spread(payload, 7)
+    assert len(forecast.limited_to(days, AMS).points) == expected
+
+
+def test_limited_to_counts_calendar_days_over_dst(payload):
+    # Clocks go back on 2026-10-25: that local day has 25 hours.
+    payload["known_until"] = "2026-10-24T00:00:00+02:00"
+    forecast = _spread(payload, 4)
+    local_days = [datetime(2026, 10, 24 + d, 0, 0, tzinfo=AMS) for d in range(4)]
+    points = tuple(
+        replace(p, start=t, end=t + timedelta(minutes=15))
+        for p, t in zip(forecast.points, local_days, strict=True)
+    )
+    dst = replace(forecast, points=points).limited_to(2, AMS)
+    assert [p.start.day for p in dst.points] == [24, 25]
+
+
+def test_limited_to_keeps_known_prices(payload):
+    forecast = Forecast.from_dict(payload)
+    assert forecast.limited_to(1, AMS).known == forecast.known

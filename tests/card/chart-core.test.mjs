@@ -4,6 +4,8 @@ import {
   localParts,
   toPoints,
   cutForecast,
+  clampDays,
+  integrationDays,
   niceStep,
   yScale,
   linearScale,
@@ -240,4 +242,18 @@ test("xTicks is DST-safe on a 23 hour day", () => {
     coarse.map((t) => localParts(t.ms, TZ).hour),
     [0, 6, 12, 18, 0],
   );
+});
+
+test("clampDays limits to the integration maximum", () => {
+  assert.equal(clampDays(7, 2), 2);
+  assert.equal(clampDays(0, 2), 1);
+  assert.equal(clampDays("x", 3), 3);
+  assert.equal(clampDays(5), 5);
+});
+
+test("integrationDays reads the sensor attribute", () => {
+  assert.equal(integrationDays({ forecast_days: 2 }), 2);
+  assert.equal(integrationDays({ forecast_days: 99 }), 7);
+  assert.equal(integrationDays({}), 7);
+  assert.equal(integrationDays(undefined), 7);
 });

@@ -133,6 +133,7 @@ class ForecastSensor(CoordinatorEntity[ForecastCoordinator], SensorEntity):
         return {
             "zone": forecast.zone,
             "known_until": forecast.known_until.isoformat(),
+            "forecast_days": self.coordinator.forecast_days,
             "known": [_dump(p) for p in forecast.known],
             "forecast": [_dump(p) for p in forecast.points],
         }
