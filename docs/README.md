@@ -1,5 +1,7 @@
 # Day-Ahead Price Forecast
 
+[![Release](https://img.shields.io/github/v/release/abroeders/7day-ahead-price-forecast)](https://github.com/abroeders/7day-ahead-price-forecast/releases)
+
 A Home Assistant integration that forecasts the day-ahead electricity price per quarter hour for the **7 days
 after the last known price day**, with a **P10–P90 uncertainty band**, and a Lovelace chart card that shows it. The
 forecast is made by a model of the Lectoraat Smart Energy of MNEXT. No account or API key is needed.
