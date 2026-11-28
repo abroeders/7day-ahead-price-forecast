@@ -77,6 +77,19 @@ export function cutForecast(forecast, knownUntil, days, timeZone) {
   return forecast.filter((p) => p.start < limit);
 }
 
+/** Clamp a configured number of forecast days to 1..max (max defaults to 7). */
+export function clampDays(v, max = 7) {
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n)) return max;
+  return Math.min(max, Math.max(1, n));
+}
+
+/** Forecast days the integration delivers (sensor attribute forecast_days); 7 when it does not say. */
+export function integrationDays(attributes) {
+  const n = Math.round(Number(attributes && attributes.forecast_days));
+  return Number.isFinite(n) ? Math.min(7, Math.max(1, n)) : 7;
+}
+
 /** Round a step up to 1, 2, 2.5, 5 times a power of ten. */
 export function niceStep(rawStep) {
   if (!(rawStep > 0)) return 1;

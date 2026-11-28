@@ -31,7 +31,7 @@ forecast_days: 5
 | Option | Default | Description |
 |---|---|---|
 | `entity` | required | A forecast sensor of a sub-controller (a sensor with the `forecast` attribute). |
-| `forecast_days` | `7` | Number of forecast days to show, 1 to 7. Forecast day 1 is the first day after the published day-ahead prices. The published prices are always shown in full. |
+| `forecast_days` | `7` | Number of forecast days to show, 1 to 7, and never more than the *Forecast days* setting of the base controller (the editor shows that maximum). Forecast day 1 is the first day after the published day-ahead prices. The published prices are always shown in full. |
 | `title` | none | Title above the chart. |
 | `show_table` | `true` | Show the table with the average and the cheapest and most expensive hour per day. |
 

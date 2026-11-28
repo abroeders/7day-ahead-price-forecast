@@ -3,14 +3,28 @@
     "step": {
       "user": {
         "title": "Day-ahead price forecast",
-        "description": "Choose the market zone of the base controller.",
+        "description": "Choose the market zone of the base controller and how many forecast days to fetch.",
         "data": {
-          "zone": "Zone"
+          "zone": "Zone",
+          "forecast_days": "Forecast days"
+        },
+        "data_description": {
+          "forecast_days": "Number of days after the last known price day (1-7). Fewer days means less data."
+        }
+      },
+      "reconfigure": {
+        "title": "Forecast days",
+        "data": {
+          "forecast_days": "Forecast days"
+        },
+        "data_description": {
+          "forecast_days": "Number of forecast days to fetch and show (1-7). The Lovelace card is limited to this number."
         }
       }
     },
     "abort": {
-      "already_configured": "This zone is already configured."
+      "already_configured": "This zone is already configured.",
+      "reconfigure_successful": "Settings saved."
     }
   },
   "config_subentries": {

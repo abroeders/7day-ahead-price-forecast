@@ -8,16 +8,17 @@ Lectoraat Smart Energie of MNEXT; the integration only reads it.
 classDiagram
   class ForecastProvider {
     <<interface>>
-    +fetch(zone) Forecast
+    +fetch(zone, days) Forecast
   }
   class RemoteProvider {
     -servers: list~str~
-    +fetch(zone) Forecast
+    +fetch(zone, days) Forecast
   }
   class Forecast {
     +points: list~PricePoint~
     +known: list~PricePoint~
     +accuracy: dict
+    +limited_to(days, tz) Forecast
   }
   class PricePoint {
     +start
@@ -54,6 +55,7 @@ classDiagram
   class ForecastCoordinator {
     <<base controller>>
     +zone: str
+    +forecast_days: int
     +node: str
     -provider: ForecastProvider
     +refresh()
@@ -112,9 +114,9 @@ sequenceDiagram
   participant P as RemoteProvider
   participant S1 as Server (picked at random)
   participant S2 as Other server
-  C->>P: fetch(zone)
+  C->>P: fetch(zone, forecast_days)
   P->>P: shuffle server list
-  P->>S1: GET forecast
+  P->>S1: GET forecast (days=N)
   alt answers and is fresh
     S1-->>P: forecast
   else error, time-out or too old
@@ -122,6 +124,7 @@ sequenceDiagram
     S2-->>P: forecast
   end
   P-->>C: Forecast
+  C->>C: limited_to(forecast_days)
   C-->>Sensors: listeners notified
   Sensors->>Sensors: each forecast sensor applies its formula
 ```
@@ -159,11 +162,13 @@ classDiagram
     -drawBox(x0, x1)
   }
   class DayAheadPriceForecastCardEditor {
-    ha-form: entity + forecast_days
+    ha-form: entity + forecast_days (max from the sensor)
   }
   class ChartCore {
     <<module>>
     +cutForecast()
+    +clampDays()
+    +integrationDays()
     +yScale()
     +stepPath()
     +bandPolygon()
@@ -186,7 +191,7 @@ sequenceDiagram
   participant Core as chart-core
   participant U as User
   HA->>Card: hass (sensor changed)
-  Card->>Core: toPoints, cutForecast(forecast_days)
+  Card->>Core: toPoints, integrationDays, clampDays, cutForecast(forecast_days)
   Card->>Core: yScale, stepPath, bandPolygon, dayStats
   Card->>Card: draw SVG and table
   U->>Card: pointermove

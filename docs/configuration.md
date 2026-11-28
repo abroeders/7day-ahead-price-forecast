@@ -4,6 +4,21 @@
 One per market zone. It refreshes the forecast every 30 minutes from the forecast service (failing over to the
 second server) and provides the [service state and accuracy sensors](entities.md).
 
+| Field | Meaning |
+|---|---|
+| Zone | the market zone, chosen when you add the base controller |
+| Forecast days | how many forecast days to fetch and show, 1 to 7 (default 7) |
+
+![Adding the base controller: zone and forecast days](images/zone-form.png)
+
+### Forecast days
+Forecast day 1 is the first day after the published day-ahead prices. With fewer days the integration asks the
+forecast service for less data (`days` query parameter) and the forecast sensors carry only those days. This saves
+bandwidth and storage when you only need, for example, the next two days. Change it later with **Reconfigure** on
+the integration page; the integration reloads. The [price chart card](card.md) cannot show more days than this.
+
+![Reconfiguring the forecast days](images/forecast-days-reconfigure.png)
+
 ## Sub-controllers
 A sub-controller turns the bare market price `P` (EUR/kWh) into your own price with a formula and delivers a
 [forecast sensor](entities.md#forecast-sensor). Add one with **Add sub-controller** on the integration page; edit

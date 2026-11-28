@@ -6,6 +6,12 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 ## [Unreleased]
 
+### Added
+
+- Base controller setting *Forecast days* (1 to 7, default 7), also in **Reconfigure**. The integration asks the
+  forecast service for only that many days (`days` query parameter) and the forecast sensors have a
+  `forecast_days` attribute. The Lovelace card cannot show more days than this setting.
+
 ## [2026.11.3] - 2026-11-27
 
 ### Added

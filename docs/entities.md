@@ -11,7 +11,8 @@ formula; it updates at every quarter hour. The attributes carry the whole series
 | `zone` | market zone, for example `NL` |
 | `known_until` | end of the last published price day; the forecast starts here |
 | `known` | published prices: `start`, `end`, `value` |
-| `forecast` | 7 forecast days of quarter hours, the first one being the day after the published prices: `start`, `end`, `value` (median), `p10`, `p90` |
+| `forecast_days` | number of forecast days the base controller fetches (1 to 7); the card shows at most this many |
+| `forecast` | up to 7 forecast days (see `forecast_days`) of quarter hours, the first one being the day after the published prices: `start`, `end`, `value` (median), `p10`, `p90` |
 
 The `known` and `forecast` attributes are not stored in the recorder database. The [price chart card](card.md)
 reads them to draw the chart.

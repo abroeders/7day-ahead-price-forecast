@@ -17,6 +17,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
     DateSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -27,11 +30,14 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_ALLOW_NEGATIVE,
+    CONF_FORECAST_DAYS,
     CONF_FORMULA,
     CONF_VARIANTS,
     CONF_ZONE,
+    DEFAULT_FORECAST_DAYS,
     DEFAULT_FORMULA,
     DOMAIN,
+    MAX_FORECAST_DAYS,
     SUBENTRY_CONTROLLER,
 )
 from .core.errors import FormulaError
@@ -42,6 +48,12 @@ from .zones import ZONES
 WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
 
+def _days_selector() -> NumberSelector:
+    return NumberSelector(
+        NumberSelectorConfig(min=1, max=MAX_FORECAST_DAYS, step=1, mode=NumberSelectorMode.BOX)
+    )
+
+
 class DayAheadConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
@@ -50,12 +62,28 @@ class DayAheadConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_ZONE])
             self._abort_if_unique_id_configured()
             zone = ZONES[user_input[CONF_ZONE]]
-            return self.async_create_entry(title=zone.name, data=user_input)
+            data = {**user_input, CONF_FORECAST_DAYS: int(user_input[CONF_FORECAST_DAYS])}
+            return self.async_create_entry(title=zone.name, data=data)
         options = [SelectOptionDict(value=z.code, label=z.name) for z in ZONES.values()]
         schema = vol.Schema(
-            {vol.Required(CONF_ZONE): SelectSelector(SelectSelectorConfig(options=options))}
+            {
+                vol.Required(CONF_ZONE): SelectSelector(SelectSelectorConfig(options=options)),
+                vol.Required(CONF_FORECAST_DAYS, default=DEFAULT_FORECAST_DAYS): _days_selector(),
+            }
         )
         return self.async_show_form(step_id="user", data_schema=schema)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            return self.async_update_reload_and_abort(
+                entry, data_updates={CONF_FORECAST_DAYS: int(user_input[CONF_FORECAST_DAYS])}
+            )
+        current = entry.data.get(CONF_FORECAST_DAYS, DEFAULT_FORECAST_DAYS)
+        schema = vol.Schema({vol.Required(CONF_FORECAST_DAYS, default=current): _days_selector()})
+        return self.async_show_form(step_id="reconfigure", data_schema=schema)
 
     @classmethod
     @callback

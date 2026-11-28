@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, replace
+from datetime import datetime, timedelta, tzinfo
 from typing import Any
 
 from .errors import ForecastError
@@ -35,6 +35,12 @@ class Forecast:
     accuracy: dict
     node: str
     stale: bool
+
+    def limited_to(self, days: int, tz: tzinfo) -> Forecast:
+        """Copy with the forecast cut at ``known_until`` plus ``days`` local calendar days."""
+        local = self.known_until.astimezone(tz).replace(tzinfo=None)
+        limit = (local + timedelta(days=days)).replace(tzinfo=tz)
+        return replace(self, points=tuple(p for p in self.points if p.start < limit))
 
     @classmethod
     def from_dict(cls, payload: Any) -> Forecast:

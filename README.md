@@ -7,7 +7,7 @@
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-ffdd00?logo=buymeacoffee&logoColor=black)](https://www.buymeacoffee.com/abroeders)
 
 **Know tomorrow's electricity price before it is published, and next week's too.** A Home Assistant integration
-that forecasts the day-ahead price **per quarter hour for the 7 days after the last known price day**, with a
+that forecasts the day-ahead price **per quarter hour for up to 7 days after the last known price day**, with a
 P10–P90 uncertainty band, and a Lovelace chart card that shows it.
 
 ![The price chart card: published prices solid, forecast dashed with its band](docs/images/card.png)
