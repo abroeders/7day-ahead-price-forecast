@@ -6,6 +6,11 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 ## [Unreleased]
 
+### Added
+
+- A badge with the latest release on the documentation home page and in the README; it updates itself with every
+  release.
+
 ## [2026.11.4] - 2026-11-28
 
 ### Changed
