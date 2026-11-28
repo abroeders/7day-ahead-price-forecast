@@ -6,6 +6,11 @@ and versions follow Home Assistant's scheme: `YEAR.MONTH.N`.
 
 ## [Unreleased]
 
+### Changed
+
+- Installation: the integration is in the Marketplace by default, so the steps no longer start with *Add from
+  link*. HACS (default catalog, no custom repository) is described for Home Assistant 2026.3 to 2026.10.
+
 ### Added
 
 - Base controller setting *Forecast days* (1 to 7, default 7), also in **Reconfigure**. The integration asks the

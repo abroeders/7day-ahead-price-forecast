@@ -5,22 +5,18 @@
 - Internet access from Home Assistant to the forecast service. No account or API key is needed.
 
 ## Install from the Marketplace (Home Assistant 2026.11 and later)
+The integration is in the Marketplace by default; there is nothing to add first.
 
-[![Open your Home Assistant instance and add a repository to the Marketplace.](https://my.home-assistant.io/badges/marketplace_repositories.svg)](https://my.home-assistant.io/redirect/marketplace_repositories/)
-
-1. *Settings → Marketplace*, upper right **Add from link** (the button above opens it).
-2. Under *GitHub link* enter `abroeders/7day-ahead-price-forecast` and select **Add**; if asked for the type,
-   choose *Integration* and select **Add** again.
-3. Open **Day-ahead price forecast** and select **Install**, check the version, **Install**.
-4. Restart Home Assistant.
-
-The Marketplace needs a GitHub account connected to it (it asks for one the first time). The repository is not
-in the Marketplace's own catalog yet, which is why it is added from its link.
+1. Open *Settings → Marketplace* and search for **Day-ahead price forecast**.
+2. Open it, select **Install**, check the version and select **Install** again.
+3. Restart Home Assistant.
 
 ## Install with HACS (Home Assistant 2026.3 to 2026.10)
-1. Open HACS, choose **Custom repositories** and add `https://github.com/abroeders/7day-ahead-price-forecast`
-   as category *Integration* (or use the button below).
-2. Search for **Day-ahead price forecast**, download it and restart Home Assistant.
+On these versions the Marketplace is not available; use HACS. The integration is in the default HACS catalog, so
+no custom repository is needed.
+
+1. Open HACS and search for **Day-ahead price forecast**.
+2. Download it and restart Home Assistant.
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=abroeders&repository=7day-ahead-price-forecast&category=integration)
 
