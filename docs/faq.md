@@ -9,6 +9,10 @@ should be treated as unreliable.
 **My formula is rejected.** Check that it only uses `P`, numbers, `+ - * /`, parentheses, `min` and `max`, and that
 it does not decrease when `P` increases. `-P` and `1 - P` are therefore invalid.
 
+**How do I fetch less data?** Lower *Forecast days* of the base controller (**Reconfigure** on the integration
+page, see [Configuration](configuration.md#forecast-days)). The integration then asks the forecast service for only
+those days (`days` query parameter, 1 to 7). The price chart card cannot show more days than you set.
+
 **How do I chart the forecast?** Use the [price chart card](card.md); it needs no extra setup.
 
 **Which price does the forecast describe?** The bare day-ahead market price in EUR/kWh per quarter hour. Taxes,
